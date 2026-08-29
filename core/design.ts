@@ -41,6 +41,14 @@ export function emptyDesign(brand: BrandProfile, partial: Partial<DesignState> =
     headlineY: 0,
     supportX: 0,
     supportY: 0,
+    textureSrc: "",
+    textureVisible: false,
+    textureScale: 1,
+    textureX: 0,
+    textureY: 0,
+    textureOpacity: 1,
+    textureRotation: 0,
+    textureBlur: 0,
     ...partial,
   };
 }

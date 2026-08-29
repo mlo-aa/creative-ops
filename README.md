@@ -2,7 +2,7 @@
 
 A standalone, brand-agnostic social content studio. Plan Instagram (and other) feeds, edit compositions against an approved brand system, and export JPG, PNG, GIF, and carousel slides.
 
-Senda ships as the first example project. The application itself has no Senda-specific assumptions — colors, logos, copy, photography, and path graphics all live in project data.
+Senda and **OFFER-HUB** ship as seeded example projects. The application itself has no brand-specific assumptions — colors, logos, copy, photography, and path graphics all live in project data.
 
 ## Install and run
 
@@ -22,9 +22,9 @@ npm start
 
 The home screen lists projects. Each project has its own brand, assets, posts, drafts, feed order, and export prefix.
 
-Seeded projects (currently **Senda**) live in `projects/<id>/` and `public/projects/<id>/`.
+Seeded projects (currently **Senda** and **OFFER-HUB**) live in `projects/<id>/` and `public/projects/<id>/`.
 
-Projects you create in the UI are stored in `localStorage` (`scs:v1`). Editor changes to seeded projects are stored as overlays on top of the repo defaults, so **Reset project changes** can restore the original Senda feed.
+Projects you create in the UI are stored in `localStorage` (`scs:v1`). Editor changes to seeded projects are stored as overlays on top of the repo defaults, so **Reset project changes** can restore the original seed feed.
 
 ## Brand configuration
 
@@ -75,7 +75,7 @@ Presets also include square, story, LinkedIn portrait, and X landscape (`core/fo
 
 On a post: **Export JPG**, **Export PNG**, **Export GIF** (animated posts), **Export all slides** (carousels).
 
-Filenames use the project export prefix, e.g. `senda-post-01.jpg`, `senda-07-01.jpg`.
+Filenames use the project export prefix and optional post `exportSlug`, e.g. `senda-post-01.jpg`, `offerhub-01-brand.jpg`, `senda-07-01.jpg`.
 
 Exports match the selected format dimensions. GIF capture is frame-by-frame — keep the tab in the foreground.
 
@@ -90,9 +90,37 @@ Exports match the selected format dimensions. GIF capture is frame-by-frame — 
 | What | Where |
 | --- | --- |
 | Seeded brand, posts, graphics | `projects/` + `public/projects/` |
-| Editor overlays, user projects, uploads | `localStorage` key `scs:v1` |
+| **Primary (cloud)** | Supabase Postgres + Storage |
+| Local safety cache | `localStorage` key `scs:cache:v1` |
+| Legacy local (migration) | `localStorage` key `scs:v1` |
 
-The store in `core/store.tsx` is the persistence boundary. A later Supabase/cloud layer can replace `loadPersist` / `savePersist` without rewriting the editor.
+When Supabase is configured, all mutable Creative Ops data syncs to Postgres. Edits are optimistic (instant UI) with debounced cloud writes (~1.2s). A local cache preserves unsynced changes if cloud is unavailable.
+
+### Cloud setup (Vercel + Supabase)
+
+1. Create a Supabase project.
+2. Run `supabase/migrations/001_initial_schema.sql` in the SQL Editor.
+3. Create Storage buckets: `brand-assets`, `project-assets`, `design-assets`, `exports` (public read).
+4. Copy `.env.example` → `.env.local` and fill:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+5. Deploy to Vercel with the same env vars (`SUPABASE_SERVICE_ROLE_KEY` as server-only).
+
+On first load with existing `scs:v1` local data, you'll be prompted to **Import to cloud** or **Skip**.
+
+### Audits
+
+```bash
+npm run audit:design        # DesignDocument workflow
+npm run audit:persistence   # Cloud + primitives (+ live DB if env configured)
+```
+
+No user auth. Single personal workspace. Optional deployment protection via Vercel.
 
 ## Migrating a brand into Content Studio
 
@@ -106,6 +134,4 @@ The store in `core/store.tsx` is the persistence boundary. A later Supabase/clou
 
 ## Stack
 
-Next.js 16, TypeScript, Tailwind CSS v4, Framer Motion, `html-to-image`, `gifenc`.
-
-No backend. No auth.
+Next.js 16, TypeScript, Tailwind CSS v4, Framer Motion, `html-to-image`, `gifenc`, Supabase (Postgres + Storage).

@@ -131,6 +131,50 @@ export function DesignEditor({
           </Field>
         </>
       ) : null}
+      {controls.texture ? (
+        <>
+          <p className="mt-2 mb-2 text-[11px] tracking-[0.16em] uppercase opacity-50">Texture</p>
+          <Toggle
+            label="Show texture"
+            checked={design.textureVisible}
+            onChange={(textureVisible) => onChange({ textureVisible })}
+          />
+          <Slider
+            label="Scale"
+            value={design.textureScale}
+            min={0.4}
+            max={2.4}
+            step={0.02}
+            onChange={(textureScale) => onChange({ textureScale })}
+          />
+          <Slider label="X" value={design.textureX} min={-600} max={600} onChange={(textureX) => onChange({ textureX })} />
+          <Slider label="Y" value={design.textureY} min={-600} max={600} onChange={(textureY) => onChange({ textureY })} />
+          <Slider
+            label="Opacity"
+            value={design.textureOpacity}
+            min={0}
+            max={1}
+            step={0.02}
+            onChange={(textureOpacity) => onChange({ textureOpacity })}
+          />
+          <Slider
+            label="Rotation"
+            value={design.textureRotation}
+            min={-180}
+            max={180}
+            step={1}
+            onChange={(textureRotation) => onChange({ textureRotation })}
+          />
+          <Slider
+            label="Blur"
+            value={design.textureBlur}
+            min={0}
+            max={40}
+            step={1}
+            onChange={(textureBlur) => onChange({ textureBlur })}
+          />
+        </>
+      ) : null}
       {controls.animation ? (
         <>
           <Toggle label="Animation" checked={design.animationEnabled} onChange={(animationEnabled) => onChange({ animationEnabled })} />

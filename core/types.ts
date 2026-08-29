@@ -84,6 +84,7 @@ export type TemplateControls = {
   mark: boolean;
   image: boolean;
   path: boolean;
+  texture?: boolean;
   animation: boolean;
 };
 
@@ -127,6 +128,15 @@ export type DesignState = {
   headlineY: number;
   supportX: number;
   supportY: number;
+  /** Optional campaign texture layer (Offer-Hub and future brands). */
+  textureSrc: string;
+  textureVisible: boolean;
+  textureScale: number;
+  textureX: number;
+  textureY: number;
+  textureOpacity: number;
+  textureRotation: number;
+  textureBlur: number;
 };
 
 export type CarouselSlide = {
@@ -147,10 +157,18 @@ export type StudioPost = {
   kind: PostKind;
   variantOf?: string;
   variantLabel?: string;
+  /** Optional export filename middle segment, e.g. `01-brand` → `{prefix}-01-brand.jpg` */
+  exportSlug?: string;
   template: string;
   design: DesignState;
+  /** Structured design document — source of truth for document-mode posts */
+  document?: DesignDocument;
+  /** Posts referenced for AI generation / visual follow */
+  referencePostIds?: string[];
   slides?: CarouselSlide[];
 };
+
+export type DesignDocument = import("@/core/design/document").DesignDocument;
 
 export type PostRenderProps = {
   design: DesignState;
@@ -172,6 +190,8 @@ export type ProjectConfig = {
   createdAt: string;
   formatId: string;
   exportPrefix: string;
+  /** Optional campaign label shown in the project chrome (e.g. active feed context). */
+  campaign?: string;
   brand: BrandProfile;
   assets: ProjectAsset[];
   posts: StudioPost[];
@@ -182,6 +202,8 @@ export type PostPatch = {
   status?: StudioStatus;
   title?: string;
   design?: Partial<DesignState>;
+  document?: DesignDocument;
+  referencePostIds?: string[];
   slideOrder?: string[];
   extraSlides?: CarouselSlide[];
   removedSlideIds?: string[];
@@ -205,7 +227,8 @@ export type ProjectOverlay = {
 };
 
 export type AppPersist = {
-  version: 1;
+  version: 2;
   userProjects: ProjectConfig[];
   overlays: Record<string, ProjectOverlay>;
+  ops: import("@/core/ops/types").OpsPersist;
 };

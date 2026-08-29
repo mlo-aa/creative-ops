@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Sora } from "next/font/google";
 import { Providers } from "@/core/ui/Providers";
 import "./globals.css";
 
@@ -13,14 +13,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const sora = Sora({
+  variable: "--font-sora",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "Content Studio",
-  description: "A lightweight branded social content studio.",
+  title: "Creative Ops Studio",
+  description: "Creative operations workspace — projects, strategy, content, and social design.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${sora.variable} h-full antialiased`}
+    >
       <body className="min-h-full bg-[#111] text-[#f4f1ea]">
         <Providers>{children}</Providers>
       </body>

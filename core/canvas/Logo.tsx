@@ -39,9 +39,8 @@ export function MarkImage({
     <img
       src={src}
       alt=""
-      width={width}
       height={height}
-      style={{ display: "block", width, height, opacity, objectFit: "contain" }}
+      style={{ display: "block", height, width: "auto", opacity, objectFit: "contain" }}
     />
   );
 }
@@ -54,10 +53,9 @@ export function Wordmark({ color, size = 42 }: { color: string; size?: number })
         color,
         fontFamily: font.primary,
         fontSize: size,
-        fontWeight: 500,
+        fontWeight: 600,
         letterSpacing: "0.01em",
         lineHeight: 1,
-        textTransform: "lowercase",
       }}
     >
       {shortName}

@@ -3,13 +3,21 @@
 import { captureJpeg, capturePng, downloadBlob, downloadDataUrl } from "@/core/export/capture";
 import { encodeGifFromFrames } from "@/core/export/encodeGif";
 import type { ProjectConfig, StudioPost } from "@/core/types";
+import { uploadExportBlob } from "@/core/repositories/upload-client";
+import { useStudio } from "@/core/store";
 import { useState, type RefObject } from "react";
+
+export function exportBasename(project: ProjectConfig, post: StudioPost) {
+  const prefix = project.exportPrefix || project.id;
+  if (post.exportSlug) return `${prefix}-${post.exportSlug}`;
+  return `${prefix}-post-${post.id}`;
+}
 
 export function slideFilename(project: ProjectConfig, post: StudioPost, index: number) {
   const n = String(index + 1).padStart(2, "0");
   const prefix = project.exportPrefix || project.id;
   if (post.kind === "carousel") return `${prefix}-${post.id}-${n}.jpg`;
-  return `${prefix}-post-${post.id}.jpg`;
+  return `${exportBasename(project, post)}.jpg`;
 }
 
 export function ExportControls({
@@ -35,7 +43,21 @@ export function ExportControls({
 }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const prefix = project.exportPrefix || project.id;
+  const [saveToProject, setSaveToProject] = useState(false);
+  const { cloudEnabled } = useStudio();
+  const base = exportBasename(project, post);
+
+  async function maybeSaveExport(blob: Blob, fileName: string, mimeType: string) {
+    if (!saveToProject || !cloudEnabled) return;
+    await uploadExportBlob({
+      blob,
+      projectId: project.id,
+      designId: post.id,
+      fileName,
+      mimeType,
+    });
+    setStatus("Saved export to project.");
+  }
 
   async function run(label: string, fn: () => Promise<void>) {
     setBusy(true);
@@ -64,12 +86,10 @@ export function ExportControls({
             const node = canvasRef.current;
             if (!node) return;
             const dataUrl = await captureJpeg(node, width, height);
-            downloadDataUrl(
-              dataUrl,
-              post.kind === "carousel"
-                ? slideFilename(project, post, slideIndex)
-                : `${prefix}-post-${post.id}.jpg`,
-            );
+            const name = post.kind === "carousel" ? slideFilename(project, post, slideIndex) : `${base}.jpg`;
+            downloadDataUrl(dataUrl, name);
+            const res = await fetch(dataUrl);
+            await maybeSaveExport(await res.blob(), name, "image/jpeg");
           })
         }
       >
@@ -84,7 +104,7 @@ export function ExportControls({
             const node = canvasRef.current;
             if (!node) return;
             const dataUrl = await capturePng(node, width, height);
-            downloadDataUrl(dataUrl, `${prefix}-post-${post.id}.png`);
+            downloadDataUrl(dataUrl, `${base}.png`);
           })
         }
       >
@@ -113,7 +133,7 @@ export function ExportControls({
                   await new Promise((resolve) => window.setTimeout(resolve, 24));
                 },
               );
-              downloadBlob(blob, `${prefix}-post-${post.id}.gif`);
+              downloadBlob(blob, `${base}.gif`);
             })
           }
         >
@@ -129,6 +149,12 @@ export function ExportControls({
         >
           Export all slides
         </button>
+      ) : null}
+      {cloudEnabled ? (
+        <label className="flex items-center gap-2 text-[10px] uppercase opacity-50">
+          <input type="checkbox" checked={saveToProject} onChange={(e) => setSaveToProject(e.target.checked)} />
+          Save export to project
+        </label>
       ) : null}
       {status ? <span className="text-[13px] opacity-70">{status}</span> : null}
     </div>

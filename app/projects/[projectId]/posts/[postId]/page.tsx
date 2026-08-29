@@ -3,6 +3,7 @@
 import { FluidStage, StudioCanvas, StudioStage } from "@/core/canvas/Canvas";
 import { hexOf } from "@/core/color";
 import { DesignEditor } from "@/core/editor/DesignEditor";
+import { DocumentEditor } from "@/core/editor/DocumentEditor";
 import { captureJpeg, downloadDataUrl, waitTwoFrames } from "@/core/export/capture";
 import { ExportControls, slideFilename } from "@/core/export/ExportControls";
 import { getFormat } from "@/core/formats";
@@ -10,6 +11,7 @@ import { useProject } from "@/core/project/context";
 import { useStudio } from "@/core/store";
 import { canvasBackground, PostArt } from "@/core/templates/registry";
 import type { CarouselSlide } from "@/core/types";
+import type { VariationMode } from "@/core/design/generation/provider";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
@@ -19,12 +21,16 @@ export default function PostEditorPage() {
   const project = useProject();
   const {
     updateDesign,
+    updateDocument,
     updateSlideOrder,
     duplicateSlide,
     deleteSlide,
     resetDesign,
     duplicateAsVariant,
     setStatus,
+    generateDesignVariations,
+    saveDesignAsTemplate,
+    setDesignReferences,
   } = useStudio();
   const post = project.posts.find((item) => item.id === postId);
   const format = getFormat(project.formatId);
@@ -34,6 +40,12 @@ export default function PostEditorPage() {
   const [exportProgress, setExportProgress] = useState<number | null>(null);
   const [slideId, setSlideId] = useState<string | undefined>(undefined);
   const [scale, setScale] = useState(0.48);
+  const [selectedLayerId, setSelectedLayerId] = useState<string | undefined>();
+  const [refPicker, setRefPicker] = useState(false);
+  const [variationPicker, setVariationPicker] = useState(false);
+  const [variationMode, setVariationMode] = useState<VariationMode>("same_content_new_layout");
+  const [generatingVariations, setGeneratingVariations] = useState(false);
+  const isDocument = post?.template === "document" && Boolean(post.document);
   const exporting = capturing || exportProgress !== null;
   const slides = post?.slides ?? [];
   const currentSlide = slides.find((slide) => slide.id === slideId) ?? slides[0];
@@ -103,6 +115,30 @@ export default function PostEditorPage() {
           <button type="button" className={chrome} onClick={() => duplicateAsVariant(project.id, post.id)}>
             Duplicate as variant
           </button>
+          {isDocument && post.document ? (
+            <>
+              <button
+                type="button"
+                className={chrome}
+                onClick={() => setVariationPicker((v) => !v)}
+              >
+                Generate variations
+              </button>
+              <button
+                type="button"
+                className={chrome}
+                onClick={() => {
+                  const name = window.prompt("Template name", post.title);
+                  if (name) saveDesignAsTemplate(project.id, post.id, name);
+                }}
+              >
+                Use as template
+              </button>
+              <button type="button" className={chrome} onClick={() => setRefPicker((v) => !v)}>
+                Reference designs
+              </button>
+            </>
+          ) : null}
           <ExportControls
             project={project}
             post={post}
@@ -116,6 +152,62 @@ export default function PostEditorPage() {
           />
         </div>
       </div>
+
+      {variationPicker && isDocument ? (
+        <div className="mb-4 flex flex-wrap items-end gap-3 border border-white/10 p-3">
+          <div>
+            <p className="mb-2 text-[10px] uppercase opacity-40">Variation mode</p>
+            <select
+              className="border border-white/10 bg-[#141414] px-3 py-2 text-xs"
+              value={variationMode}
+              onChange={(e) => setVariationMode(e.target.value as VariationMode)}
+            >
+              <option value="same_content_new_layout">Same content, new layout</option>
+              <option value="same_layout_new_content">Same layout, new content</option>
+              <option value="color_variation">New color variation</option>
+              <option value="more_experimental">More experimental</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            className={chrome}
+            disabled={generatingVariations}
+            onClick={async () => {
+              setGeneratingVariations(true);
+              try {
+                const ids = await generateDesignVariations(project.id, post.id, variationMode);
+                if (ids[0]) window.location.href = `/projects/${project.id}/posts/${ids[0]}`;
+              } finally {
+                setGeneratingVariations(false);
+              }
+            }}
+          >
+            {generatingVariations ? "Generating…" : "Create 2 variations"}
+          </button>
+        </div>
+      ) : null}
+
+      {refPicker && isDocument ? (
+        <div className="mb-4 flex flex-wrap gap-2 border border-white/10 p-3">
+          <span className="w-full text-[10px] uppercase opacity-40">Reference for future generations</span>
+          {project.posts.filter((p) => p.id !== post.id).map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className="border px-2 py-1 text-[10px] uppercase"
+              style={{ opacity: post.referencePostIds?.includes(p.id) ? 1 : 0.35 }}
+              onClick={() => {
+                const ids = new Set(post.referencePostIds ?? []);
+                if (ids.has(p.id)) ids.delete(p.id);
+                else ids.add(p.id);
+                setDesignReferences(project.id, post.id, [...ids]);
+              }}
+            >
+              {p.number} {p.title}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {post.kind === "carousel" && currentSlide ? (
         <CarouselBar
@@ -161,17 +253,32 @@ export default function PostEditorPage() {
               editing={editing}
               exporting={exporting}
               onDesignChange={(patch) => updateDesign(project.id, post.id, patch, currentSlide?.id)}
+              onDocumentChange={
+                post.document
+                  ? (doc) => updateDocument(project.id, post.id, doc)
+                  : undefined
+              }
             />
           </StudioCanvas>
         </StudioStage>
         {editing ? (
-          <DesignEditor
-            template={template}
-            design={design}
-            brand={project.brand}
-            onChange={(patch) => updateDesign(project.id, post.id, patch, currentSlide?.id)}
-            onReset={() => resetDesign(project.id, post.id)}
-          />
+          isDocument && post.document ? (
+            <DocumentEditor
+              document={post.document}
+              brand={project.brand}
+              selectedId={selectedLayerId}
+              onSelect={setSelectedLayerId}
+              onChange={(doc) => updateDocument(project.id, post.id, doc)}
+            />
+          ) : (
+            <DesignEditor
+              template={template}
+              design={design}
+              brand={project.brand}
+              onChange={(patch) => updateDesign(project.id, post.id, patch, currentSlide?.id)}
+              onReset={() => resetDesign(project.id, post.id)}
+            />
+          )
         ) : null}
       </div>
     </main>

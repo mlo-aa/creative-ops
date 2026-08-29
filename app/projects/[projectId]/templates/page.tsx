@@ -2,10 +2,19 @@
 
 import { CORE_TEMPLATE_LIST } from "@/core/templates/coreTemplates";
 import { useProject } from "@/core/project/context";
+import { OFFERHUB_TEMPLATE_LIST } from "@/projects/offerhub/templates";
 
 export default function TemplatesPage() {
   const project = useProject();
-  const projectTemplates = project.id === "senda" ? ["product-value (Senda product fragment)", "path graphics"] : [];
+  const projectTemplates =
+    project.id === "senda"
+      ? [
+          { id: "product-value", name: "Product value (Senda fragment)" },
+          { id: "path-graphics", name: "Path graphics" },
+        ]
+      : project.id === "offerhub"
+        ? OFFERHUB_TEMPLATE_LIST
+        : [];
 
   return (
     <main className="px-6 py-8">
@@ -24,9 +33,12 @@ export default function TemplatesPage() {
       </ul>
       <h2 className="mt-10 text-xs tracking-[0.16em] uppercase opacity-50">Project</h2>
       {projectTemplates.length ? (
-        <ul className="mt-4 space-y-2 text-sm opacity-80">
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
           {projectTemplates.map((item) => (
-            <li key={item}>{item}</li>
+            <li key={item.id} className="border border-white/10 px-4 py-3">
+              <p>{item.name}</p>
+              <p className="mt-1 text-[11px] tracking-[0.1em] uppercase opacity-45">{item.id}</p>
+            </li>
           ))}
         </ul>
       ) : (
