@@ -7,6 +7,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AppPersist } from "@/core/types";
 import { countImportPayload } from "@/core/repositories/import-stats";
 import { assertNoError } from "@/core/repositories/supabase-errors";
+import {
+  assertJsonbSerializable,
+  diagnoseSnapshotForJsonb,
+  findInvalidJsonbStringPaths,
+  sanitizeSnapshotForJsonb,
+} from "@/core/repositories/jsonb-sanitize";
 
 export const WORKSPACE_SNAPSHOT_ID = "main";
 
@@ -65,14 +71,26 @@ export async function saveWorkspaceSnapshot(
   client: SupabaseClient,
   persist: AppPersist,
 ): Promise<SnapshotSaveResult> {
-  const bytesStored = snapshotByteSize(persist);
-  const counts = snapshotCounts(persist);
+  diagnoseSnapshotForJsonb(persist, "workspace_snapshots.pre-sanitize");
+  const invalidBefore = findInvalidJsonbStringPaths(persist);
+  const sanitized = sanitizeSnapshotForJsonb(persist);
+  assertJsonbSerializable(sanitized);
+
+  const bytesStored = snapshotByteSize(sanitized);
+  const counts = snapshotCounts(sanitized);
 
   const { error } = await client.from("workspace_snapshots").upsert({
     id: WORKSPACE_SNAPSHOT_ID,
-    data: persist,
+    data: sanitized,
     updated_at: new Date().toISOString(),
   });
+
+  if (error && invalidBefore.length > 0 && process.env.NODE_ENV !== "production") {
+    console.warn(
+      "[workspace_snapshots.upsert] sanitized invalid paths:",
+      invalidBefore.map((item) => item.path),
+    );
+  }
 
   assertNoError("workspace_snapshots.upsert", error);
   return { bytesStored, counts };

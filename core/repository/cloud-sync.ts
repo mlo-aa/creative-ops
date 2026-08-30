@@ -2,6 +2,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type { AppPersist } from "@/core/types";
 import { saveCache, type SyncStatus } from "@/core/repository/cache";
 import { importLocalToCloudApi, syncToCloudApi } from "@/core/repositories/cloud-api";
+import { diagnoseSnapshotForJsonb } from "@/core/repositories/jsonb-sanitize";
 
 type SyncListener = (status: SyncStatus) => void;
 
@@ -44,6 +45,7 @@ export async function flushCloudSync(): Promise<boolean> {
   notify("saving");
 
   try {
+    diagnoseSnapshotForJsonb(snapshot, "cloud-sync.pre-upsert");
     const result = await syncToCloudApi(snapshot);
     if (!result.ok) {
       throw new Error(

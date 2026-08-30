@@ -7,6 +7,106 @@ function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
+export function dedupeIds(ids: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
+export type DuplicatePostDiagnostic = {
+  projectId: string;
+  postId: string;
+  title: string;
+  count: number;
+  source: "project.posts" | "overlay.order" | "overlay.extras" | "all-posts";
+};
+
+export function findDuplicatePostsInProjects(projects: ProjectConfig[]): DuplicatePostDiagnostic[] {
+  const diagnostics: DuplicatePostDiagnostic[] = [];
+
+  for (const project of projects) {
+    const hydratedCounts = new Map<string, { title: string; count: number }>();
+    for (const post of project.posts) {
+      const prev = hydratedCounts.get(post.id);
+      hydratedCounts.set(post.id, {
+        title: post.title,
+        count: (prev?.count ?? 0) + 1,
+      });
+    }
+    for (const [postId, info] of hydratedCounts) {
+      if (info.count > 1) {
+        diagnostics.push({
+          projectId: project.id,
+          postId,
+          title: info.title,
+          count: info.count,
+          source: "project.posts",
+        });
+      }
+    }
+  }
+
+  return diagnostics;
+}
+
+export function logDuplicatePostDiagnostics(
+  projects: ProjectConfig[],
+  overlaySource?: AppPersist["overlays"],
+): DuplicatePostDiagnostic[] {
+  const fromPosts = findDuplicatePostsInProjects(projects);
+  const fromOverlays: DuplicatePostDiagnostic[] = [];
+
+  if (overlaySource) {
+    for (const [projectId, overlay] of Object.entries(overlaySource)) {
+      const order = overlay.posts?.order ?? [];
+      const orderCounts = new Map<string, number>();
+      for (const id of order) orderCounts.set(id, (orderCounts.get(id) ?? 0) + 1);
+      for (const [postId, count] of orderCounts) {
+        if (count > 1) {
+          const post =
+            overlay.posts?.extras?.find((p) => p.id === postId) ??
+            projects.find((p) => p.id === projectId)?.posts.find((p) => p.id === postId);
+          fromOverlays.push({
+            projectId,
+            postId,
+            title: post?.title ?? "(unknown)",
+            count,
+            source: "overlay.order",
+          });
+        }
+      }
+
+      const extraCounts = new Map<string, number>();
+      for (const post of overlay.posts?.extras ?? []) {
+        extraCounts.set(post.id, (extraCounts.get(post.id) ?? 0) + 1);
+      }
+      for (const [postId, count] of extraCounts) {
+        if (count > 1) {
+          const post = overlay.posts?.extras?.find((p) => p.id === postId);
+          fromOverlays.push({
+            projectId,
+            postId,
+            title: post?.title ?? "(unknown)",
+            count,
+            source: "overlay.extras",
+          });
+        }
+      }
+    }
+  }
+
+  const diagnostics = [...fromPosts, ...fromOverlays];
+  if (process.env.NODE_ENV !== "production" && diagnostics.length > 0) {
+    console.warn("[Creative Ops] Duplicate StudioPost IDs detected:", diagnostics);
+  }
+  return diagnostics;
+}
+
 export function applyPostPatch(post: StudioPost, patch?: PostPatch): StudioPost {
   if (!patch) return clone(post);
   const next = clone(post);
@@ -14,6 +114,7 @@ export function applyPostPatch(post: StudioPost, patch?: PostPatch): StudioPost 
   if (patch.title) next.title = patch.title;
   if (patch.design) next.design = { ...next.design, ...patch.design };
   if (patch.document) next.document = patch.document;
+  if (patch.video) next.video = patch.video;
   if (patch.referencePostIds !== undefined) next.referencePostIds = patch.referencePostIds;
   if (next.slides) {
     if (patch.removedSlideIds?.length) {
@@ -51,18 +152,23 @@ export function applyPostPatch(post: StudioPost, patch?: PostPatch): StudioPost 
 export function hydratePosts(base: StudioPost[], overlay?: ProjectOverlay["posts"]): StudioPost[] {
   const byId = new Map<string, StudioPost>();
   for (const post of base) byId.set(post.id, clone(post));
-  for (const extra of overlay?.extras ?? []) byId.set(extra.id, clone(extra));
+  for (const extra of overlay?.extras ?? []) {
+    // Prefer overlay extras over seed/base — one canonical post per id.
+    byId.set(extra.id, clone(extra));
+  }
   const deleted = new Set(overlay?.deletedIds ?? []);
   const posts: StudioPost[] = [];
   for (const [id, post] of byId) {
     if (deleted.has(id)) continue;
     posts.push(applyPostPatch(post, overlay?.patches[id]));
   }
-  const order = overlay?.order?.length ? overlay.order : base.map((post) => post.id);
+  const rawOrder = overlay?.order?.length ? overlay.order : base.map((post) => post.id);
+  const order = dedupeIds(rawOrder);
+  const orderSet = new Set(order);
   const mapped = order
     .map((id) => posts.find((post) => post.id === id))
     .filter((post): post is StudioPost => Boolean(post));
-  const missing = posts.filter((post) => !order.includes(post.id));
+  const missing = posts.filter((post) => !orderSet.has(post.id));
   return [...mapped, ...missing];
 }
 

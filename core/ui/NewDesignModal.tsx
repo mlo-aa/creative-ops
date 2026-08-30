@@ -7,19 +7,28 @@ import { btnGhost, btnPrimary, inputClass } from "@/core/ui/OpsField";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-type Mode = "choose" | "blank" | "template" | "generate";
+type Mode = "contentType" | "choose" | "blank" | "template" | "generate" | "carousel";
 
-export function NewDesignModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function NewDesignModal({
+  open,
+  onClose,
+  onReel,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onReel?: () => void;
+}) {
   const project = useProject();
   const {
     createBlankDesign,
     createDesignFromTemplate,
+    createPost,
     generateDesign,
     listProjectDesignTemplates,
     ops,
   } = useStudio();
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("choose");
+  const [mode, setMode] = useState<Mode>("contentType");
   const [title, setTitle] = useState("");
   const [templateId, setTemplateId] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -42,7 +51,7 @@ export function NewDesignModal({ open, onClose }: { open: boolean; onClose: () =
 
   function go(id: string) {
     onClose();
-    setMode("choose");
+    setMode("contentType");
     router.push(`/projects/${project.id}/posts/${id}`);
   }
 
@@ -52,9 +61,62 @@ export function NewDesignModal({ open, onClose }: { open: boolean; onClose: () =
         className="max-h-[90vh] w-full max-w-2xl overflow-auto border border-white/15 bg-[#171717] p-6"
         onClick={(e) => e.stopPropagation()}
       >
+        {mode === "contentType" ? (
+          <>
+            <h2 className="text-xl tracking-[-0.03em]">New content</h2>
+            <p className="mt-2 text-sm opacity-50">Choose a creative type — all outputs stay fully editable.</p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              <button
+                type="button"
+                className="border border-white/10 p-4 text-left hover:border-white/25"
+                onClick={() => setMode("choose")}
+              >
+                <p className="font-medium">Static design</p>
+                <p className="mt-1 text-xs opacity-45">1080×1440 · blank, template, or AI</p>
+              </button>
+              <button
+                type="button"
+                className="border border-white/10 p-4 text-left hover:border-white/25"
+                onClick={() => setMode("carousel")}
+              >
+                <p className="font-medium">Carousel</p>
+                <p className="mt-1 text-xs opacity-45">Multi-slide document carousel</p>
+              </button>
+              <button
+                type="button"
+                className="border border-white/10 p-4 text-left hover:border-white/25"
+                onClick={() => {
+                  onClose();
+                  setMode("contentType");
+                  onReel?.();
+                }}
+              >
+                <p className="font-medium">Reel / video</p>
+                <p className="mt-1 text-xs opacity-45">1080×1920 · 9:16 · storyboard</p>
+              </button>
+            </div>
+          </>
+        ) : null}
+
+        {mode === "carousel" ? (
+          <>
+            <button type="button" className="text-xs uppercase opacity-40" onClick={() => setMode("contentType")}>← Back</button>
+            <h2 className="mt-4 text-xl">New carousel</h2>
+            <input className={`${inputClass} mt-6`} placeholder="Carousel title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <button
+              type="button"
+              className={`${btnPrimary} mt-4`}
+              onClick={() => go(createPost(project.id, "document", title || "Untitled carousel", "carousel"))}
+            >
+              Create carousel
+            </button>
+          </>
+        ) : null}
+
         {mode === "choose" ? (
           <>
-            <h2 className="text-xl tracking-[-0.03em]">New design</h2>
+            <button type="button" className="text-xs uppercase opacity-40" onClick={() => setMode("contentType")}>← Back</button>
+            <h2 className="mt-4 text-xl tracking-[-0.03em]">Static design</h2>
             <p className="mt-2 text-sm opacity-50">Create an editable design — not a flattened export.</p>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               <button type="button" className="border border-white/10 p-4 text-left hover:border-white/25" onClick={() => setMode("blank")}>

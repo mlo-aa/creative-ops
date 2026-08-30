@@ -4,6 +4,7 @@ import { FluidStage, StudioCanvas, StudioStage } from "@/core/canvas/Canvas";
 import { hexOf } from "@/core/color";
 import { DesignEditor } from "@/core/editor/DesignEditor";
 import { DocumentEditor } from "@/core/editor/DocumentEditor";
+import { VideoEditor } from "@/core/editor/VideoEditor";
 import { captureJpeg, downloadDataUrl, waitTwoFrames } from "@/core/export/capture";
 import { ExportControls, slideFilename } from "@/core/export/ExportControls";
 import { getFormat } from "@/core/formats";
@@ -64,7 +65,22 @@ export default function PostEditorPage() {
     return () => window.removeEventListener("resize", update);
   }, [format.height]);
 
-  if (!post || !design || !template) {
+  if (!post) {
+    return (
+      <main className="p-8">
+        <Link href={`/projects/${project.id}/feed`} className="text-xs uppercase tracking-[0.14em] opacity-50">
+          ← Feed
+        </Link>
+        <p className="mt-6">Post not found.</p>
+      </main>
+    );
+  }
+
+  if (post.video) {
+    return <VideoEditor post={post} />;
+  }
+
+  if (!design || !template) {
     return (
       <main className="p-8">
         <Link href={`/projects/${project.id}/feed`} className="text-xs uppercase tracking-[0.14em] opacity-50">

@@ -1,137 +1,168 @@
-# Content Studio
+# Creative Ops
 
-A standalone, brand-agnostic social content studio. Plan Instagram (and other) feeds, edit compositions against an approved brand system, and export JPG, PNG, GIF, and carousel slides.
+An AI-native creative production workspace that turns brand context into production-ready social content.
 
-Senda and **OFFER-HUB** ship as seeded example projects. The application itself has no brand-specific assumptions — colors, logos, copy, photography, and path graphics all live in project data.
+Creative Ops combines project knowledge, brand assets, creative direction, and generative AI to help move from a campaign idea to an editable **reel production kit** — resources you can finish in CapCut, Premiere, Resolve, or any editor you already use.
 
-## Install and run
+---
+
+## ElevenLabs Integration
+
+ElevenLabs is the **generative audio layer** of the reel workflow. Voice, sound design, and music are generated on demand and persisted to the project timeline before export.
+
+**Implemented today:**
+
+- **Text-to-speech voiceover** — full reel script → ElevenLabs TTS with voice selection and preview
+- **Voice selection and preview** — browse available voices before generating
+- **Sound effect generation** — per-scene SFX from natural-language prompts
+- **Per-scene sound design** — attach SFX to individual storyboard scenes
+- **ElevenLabs Music integration** — architecture and UI wired; availability depends on your ElevenLabs account/plan
+- **Audio persistence and timeline** — generated audio stored in Supabase and reflected in the reel editor
+- **Exportable production kits** — ZIP bundles include generated voiceover, music (when ready), and SFX files
+
+Audio generation is **explicit** — nothing calls ElevenLabs until you trigger it in the UI.
+
+> **Note:** AI video clip generation is architected (storyboard slots, Remotion backgrounds, provider interface) but **not active** in the default configuration. The production kit exports video prompts for external tools instead.
+
+---
+
+## Workflow
+
+```
+Brand context + assets
+        ↓
+   Reel brief
+        ↓
+Editable storyboard
+        ↓
+ Voiceover script
+        ↓
+ElevenLabs Voice + Sound Effects (+ Music when available)
+        ↓
+  Production Kit
+        ↓
+CapCut / Premiere / Resolve / other editor
+```
+
+Creative Ops intentionally **exports production resources** rather than requiring the final edit to happen inside the app. The storyboard editor, Remotion preview, and timeline help you iterate; the kit is what you take into your NLE.
+
+---
+
+## Production Kit
+
+Export a ZIP from the reel editor. Example structure:
+
+```
+offer-hub-reel/
+├── storyboard.md
+├── storyboard.json
+├── audio/
+│   ├── voiceover.mp3
+│   └── music.mp3          # when music generation succeeded
+├── sfx/
+│   └── scene-01-transition.mp3
+├── assets/
+├── prompts/
+│   ├── video-prompts.md
+│   ├── music-prompt.txt
+│   └── sound-effects.md
+├── video/                 # when video clip assets are attached
+└── reel-manifest.json
+```
+
+The manifest ties scenes, timing, audio paths, and prompts together for manual assembly.
+
+---
+
+## What has been built
+
+| Area | Description |
+| --- | --- |
+| **Project & brand context** | Named colors, fonts, logos, taglines, and assets per project |
+| **Social post management** | Feed ordering, drafts, variants, carousel/GIF support |
+| **Static design editor** | Template-based Instagram/LinkedIn compositions with export |
+| **Reel storyboard editor** | Multi-scene brief → editable scenes with timing and visual direction |
+| **Voiceover pipeline** | Scene scripts, combined script, manual override, ElevenLabs TTS |
+| **Sound design** | Per-scene SFX via ElevenLabs; optional background music |
+| **Captions** | Caption styling and timing on the reel timeline |
+| **Production kit export** | Storyboard + audio + prompts + assets as a portable ZIP |
+| **Cloud persistence** | Supabase Postgres snapshots + Storage for assets and audio |
+| **Remotion preview/render** | In-browser preview; optional local MP4 render when enabled |
+
+Seeded example projects (**Senda**, **OFFER-HUB**) demonstrate the full workflow without requiring you to build brand data from scratch.
+
+---
+
+## Tech stack
+
+- **Next.js 16** — App Router, API routes
+- **React 19 / TypeScript**
+- **ElevenLabs API** — TTS, sound effects, music
+- **Supabase** — Postgres workspace snapshots, asset/audio storage
+- **Remotion** — reel preview and optional local render
+- **Anthropic (Claude)** — optional storyboard generation when `ANTHROPIC_API_KEY` is set; mock storyboard otherwise
+- **Tailwind CSS v4**, Framer Motion, JSZip
+
+---
+
+## Screenshots
+
+_Screenshots coming soon._ The repo includes seeded brand assets under `public/projects/` for local demo.
+
+---
+
+## Setup
+
+**Requirements:** Node.js **22** (tested on 22.x), npm.
 
 ```bash
+git clone https://github.com/mlo-aa/creative-ops.git
+cd creative-ops
 npm install
+cp .env.example .env.local   # then fill in values
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Environment variables
+
+Copy `.env.example` → `.env.local`. See that file for the full list.
+
+| Variable | Scope | Purpose |
+| --- | --- | --- |
+| `ELEVENLABS_API_KEY` | **Server only** | Voiceover, SFX, music |
+| `ANTHROPIC_API_KEY` | **Server only** | Optional Claude storyboard generation |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Server only** | Cloud sync, storage uploads |
+| `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Client-side Supabase access |
+| `VIDEO_RENDER_ENABLED` | Server | Set `true` to enable local Remotion MP4 export |
+
+Without Supabase, the app runs from localStorage cache. Without ElevenLabs keys, reel editing works but audio generation is unavailable. Without Anthropic, storyboards use deterministic mock generation (no API cost).
+
+### Cloud setup (optional)
+
+1. Create a Supabase project and run `supabase/migrations/001_initial_schema.sql`.
+2. Create Storage buckets: `brand-assets`, `project-assets`, `design-assets`, `exports` (public read).
+3. Add env vars to `.env.local` and deploy (e.g. Vercel) with the same values; keep service role keys server-only.
+
+### Verification
+
 ```bash
+npm run audit:video      # Reel workflow checks (no paid API calls)
 npm run build
-npm start
 ```
 
-## How projects work
+Other audits: `audit:design`, `audit:persistence`, `audit:live-schema`.
 
-The home screen lists projects. Each project has its own brand, assets, posts, drafts, feed order, and export prefix.
+---
 
-Seeded projects (currently **Senda** and **OFFER-HUB**) live in `projects/<id>/` and `public/projects/<id>/`.
+## Status
 
-Projects you create in the UI are stored in `localStorage` (`scs:v1`). Editor changes to seeded projects are stored as overlays on top of the repo defaults, so **Reset project changes** can restore the original seed feed.
+Creative Ops is an **actively developed personal creative tooling project** — a prototype workspace for brand-consistent social production, not a commercial SaaS. Features evolve as real campaign workflows demand them.
 
-## Brand configuration
+---
 
-Open **Brand** inside a project.
+## License
 
-- Name, short name, tagline, website, description
-- Named colors (any number; the editor shows whatever the project defines)
-- Display / body / primary / secondary font stacks
-- Logo assets by role (primary, wordmark, isotipo, light, dark, …)
-
-Short name is used for the text wordmark. Marks are never redrawn — they are masked or placed as provided.
-
-## Assets
-
-**Assets** is a per-project library: logos, photography, illustrations, icons, backgrounds, textures, UI, miscellaneous.
-
-Uploads are stored in the browser (data URLs). Repo assets for Senda are files under `public/projects/senda/`.
-
-## Templates
-
-**Core templates** (`core/templates/`) define layout only:
-
-Brand introduction, big statement, question/problem, process/steps, photography + headline, product value, quote, announcement, metric, CTA, carousel cover, editorial statement, principles, team introduction, manifesto.
-
-**Project templates** can override a core id. Senda overrides `product-value` with its product fragment and supplies distinctive path graphics in `projects/senda/index.ts`.
-
-To add a custom project template:
-
-1. Create a client component in `projects/<id>/templates.tsx`.
-2. Register it in `core/templates/registry.tsx` under `PROJECT_TEMPLATES`.
-3. Reference that template id from a post in the project.
-
-## Posts and the feed
-
-- **Feed** — 3-column Instagram-style preview or full 3:4 board. Drag to reorder. Active / Draft. Variants (`01A`). Carousel and GIF badges.
-- **Posts** — list + create from a template.
-- Click a post to edit copy, approved colors, logo, crop, path, and animation. Drag major blocks on the canvas. Editor chrome never appears in exports.
-
-Only one variant in a family should sit in the active feed; activating one drafts the others.
-
-## Formats
-
-Default: **Instagram Portrait** 1080 × 1440.
-
-Presets also include square, story, LinkedIn portrait, and X landscape (`core/formats.ts`). Existing Senda posts were designed at 1080 × 1440.
-
-## Export
-
-On a post: **Export JPG**, **Export PNG**, **Export GIF** (animated posts), **Export all slides** (carousels).
-
-Filenames use the project export prefix and optional post `exportSlug`, e.g. `senda-post-01.jpg`, `offerhub-01-brand.jpg`, `senda-07-01.jpg`.
-
-Exports match the selected format dimensions. GIF capture is frame-by-frame — keep the tab in the foreground.
-
-## Import / export project
-
-**Settings → Export project** writes JSON (brand, posts, feed, template ids). Asset paths are kept; data-URL uploads are omitted.
-
-**Import project** reads a compatible JSON file into localStorage as a new (or replaced) user project.
-
-## Storage
-
-| What | Where |
-| --- | --- |
-| Seeded brand, posts, graphics | `projects/` + `public/projects/` |
-| **Primary (cloud)** | Supabase Postgres + Storage |
-| Local safety cache | `localStorage` key `scs:cache:v1` |
-| Legacy local (migration) | `localStorage` key `scs:v1` |
-
-When Supabase is configured, all mutable Creative Ops data syncs to Postgres. Edits are optimistic (instant UI) with debounced cloud writes (~1.2s). A local cache preserves unsynced changes if cloud is unavailable.
-
-### Cloud setup (Vercel + Supabase)
-
-1. Create a Supabase project.
-2. Run `supabase/migrations/001_initial_schema.sql` in the SQL Editor.
-3. Create Storage buckets: `brand-assets`, `project-assets`, `design-assets`, `exports` (public read).
-4. Copy `.env.example` → `.env.local` and fill:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
-
-5. Deploy to Vercel with the same env vars (`SUPABASE_SERVICE_ROLE_KEY` as server-only).
-
-On first load with existing `scs:v1` local data, you'll be prompted to **Import to cloud** or **Skip**.
-
-### Audits
-
-```bash
-npm run audit:design        # DesignDocument workflow
-npm run audit:persistence   # Cloud + primitives (+ live DB if env configured)
-```
-
-No user auth. Single personal workspace. Optional deployment protection via Vercel.
-
-## Migrating a brand into Content Studio
-
-1. Copy `projects/senda/` to `projects/<brand>/` (or **New project** and fill Brand setup).
-2. Put logos and photography in `public/projects/<brand>/` and list them in the project `assets` array.
-3. Define named colors and fonts. Do not add those names to application code.
-4. Create posts from core templates, or register project-specific templates for distinctive graphics.
-5. Set export prefix and default format in Settings.
-6. Plan the active feed, keep explorations as drafts/variants.
-7. Export JPG/GIF/slides as needed.
-
-## Stack
-
-Next.js 16, TypeScript, Tailwind CSS v4, Framer Motion, `html-to-image`, `gifenc`, Supabase (Postgres + Storage).
+Private / personal project. See repository owner for usage terms.

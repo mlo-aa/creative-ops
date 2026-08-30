@@ -35,7 +35,10 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
-.env*
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
 
 # vercel
 .vercel
@@ -43,3 +46,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# remotion / local render artifacts
+.remotion/
+reel-render-*/
+
+# local generated media (keep repo assets in public/)
+/tmp/
+*.mp4
+!public/**/*.mp4

@@ -43,7 +43,7 @@ export type ProjectCreativeContext = {
   assets: { id: string; name: string; src: string; category: string; tags: string[] }[];
   campaigns: { id: string; name: string; objective: string }[];
   references: { title: string; whatWeLike: string; whatNotToCopy: string; url: string }[];
-  inspiration: { title: string; category: string; notes: string; imageSrc: string }[];
+  inspiration: { id: string; title: string; category: string; notes: string; imageSrc: string }[];
   existingPosts: {
     id: string;
     title: string;
@@ -126,6 +126,7 @@ export function getProjectCreativeContext(
     inspiration: ops.inspirations
       .filter((i) => i.projectIds.includes(project.id))
       .map((i) => ({
+        id: i.id,
         title: i.title,
         category: i.category,
         notes: i.notes,

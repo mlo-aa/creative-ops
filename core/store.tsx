@@ -30,12 +30,20 @@ import {
 import { blankCanvasDocument } from "@/core/design/document";
 import type { DesignDocument, DesignTemplate } from "@/core/design/document";
 import { getProjectCreativeContext } from "@/core/design/creativeContext";
+import { designGenerationProvider, documentToDesignState, type GenerateDesignBrief, type VariationMode } from "@/core/design/generation/provider";
+import type {
+  GenerateStoryboardBrief,
+} from "@/core/video/generation/provider";
+import { attachCaptionsToDocument } from "@/core/video/captions";
+import { applyScriptToDocument, getEffectiveVoiceoverScript } from "@/core/video/script";
+import type { VideoDocument } from "@/core/video/document";
+import { cloneVideoDocument, uid } from "@/core/video/document";
+import { parseAudioApiResponse } from "@/core/video/audio/client-errors";
 import {
-  designGenerationProvider,
-  documentToDesignState,
-  type GenerateDesignBrief,
-  type VariationMode,
-} from "@/core/design/generation/provider";
+  formatVoiceoverValidationError,
+  validateVoiceoverScript,
+} from "@/core/video/script-validation";
+import { sanitizeJsonbString, sanitizeSnapshotForJsonb } from "@/core/repositories/jsonb-sanitize";
 import {
   applyTemplateToBrand,
   getDesignTemplate,
@@ -76,7 +84,7 @@ import {
   type ProjectStrategy,
   type Proposal,
 } from "@/core/ops/types";
-import { mergeProject } from "@/core/repository/hydrate";
+import { mergeProject, dedupeIds } from "@/core/repository/hydrate";
 import {
   loadCache,
   loadLegacyLocal,
@@ -167,6 +175,28 @@ type StudioContextValue = {
   createBlankDesign: (projectId: string, title?: string) => string;
   createDesignFromTemplate: (projectId: string, templateId: string, title?: string) => string;
   generateDesign: (projectId: string, brief: GenerateDesignBrief) => Promise<string>;
+  generateStoryboard: (
+    projectId: string,
+    brief: import("@/core/video/generation/provider").GenerateStoryboardBrief,
+    voiceId?: string,
+  ) => Promise<{
+    postId: string;
+    notice?: string;
+    mockReason?: string;
+    fallbackFromClaude?: boolean;
+  }>;
+  updateVideoDocument: (projectId: string, postId: string, video: import("@/core/video/document").VideoDocument) => void;
+  generateVideoVoiceover: (projectId: string, postId: string) => Promise<import("@/core/video/document").VideoDocument | null>;
+  generateVideoMusic: (projectId: string, postId: string, prompt: string) => Promise<import("@/core/video/document").VideoDocument | null>;
+  generateSceneSoundEffect: (
+    projectId: string,
+    postId: string,
+    sceneId: string,
+    prompt: string,
+    sfxId?: string,
+  ) => Promise<import("@/core/video/document").VideoDocument | null>;
+  generateVideoCaptions: (projectId: string, postId: string) => Promise<import("@/core/video/document").VideoDocument | null>;
+  exportVideoMp4: (projectId: string, postId: string) => Promise<{ ok: boolean; publicUrl?: string; errorMessage?: string; requiresWorker?: boolean }>;
   generateDesignVariations: (projectId: string, postId: string, mode: VariationMode) => Promise<string[]>;
   saveDesignAsTemplate: (projectId: string, postId: string, name: string) => string;
   setDesignReferences: (projectId: string, postId: string, referencePostIds: string[]) => void;
@@ -883,12 +913,17 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           patches: {},
           deletedIds: [],
         };
+        const extras = data.extras.some((item) => item.id === post.id)
+          ? data.extras
+          : [...data.extras, post];
+        const baseOrder = data.order.length ? data.order : dedupeIds(project.posts.map((p) => p.id));
+        const order = baseOrder.includes(post.id) ? baseOrder : [...baseOrder, post.id];
         return {
           ...current,
           posts: {
             ...data,
-            extras: [...data.extras, post],
-            order: [...(data.order.length ? data.order : project.posts.map((p) => p.id)), post.id],
+            extras,
+            order: dedupeIds(order),
           },
         };
       });
@@ -981,6 +1016,322 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       return id;
     },
     [getProject, ops, appendPost, logActivity],
+  );
+
+  const updateVideoDocument = useCallback(
+    (projectId: string, postId: string, video: VideoDocument) => {
+      patchOverlay(projectId, (current) => ({
+        ...current,
+        posts: {
+          ...(current.posts ?? { order: [], extras: [], patches: {}, deletedIds: [] }),
+          patches: {
+            ...(current.posts?.patches ?? {}),
+            [postId]: {
+              ...(current.posts?.patches?.[postId] ?? {}),
+              video,
+            },
+          },
+        },
+      }));
+    },
+    [patchOverlay],
+  );
+
+  const generateStoryboard = useCallback(
+    async (projectId: string, brief: GenerateStoryboardBrief, voiceId?: string) => {
+      const project = getProject(projectId);
+      if (!project) return { postId: "" };
+      const context = getProjectCreativeContext(project, ops);
+
+      const res = await fetch("/api/video/storyboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brief, context, options: { voiceId } }),
+      });
+      const data = (await res.json()) as {
+        video?: import("@/core/video/document").VideoDocument;
+        error?: string;
+        provider?: string;
+        model?: string | null;
+        mockReason?: string;
+        fallbackFromClaude?: boolean;
+        notice?: string;
+      };
+      if (!res.ok || !data.video) {
+        throw new Error(data.error ?? "Storyboard generation failed");
+      }
+
+      const video = data.video;
+      video.projectId = projectId;
+      if (voiceId) {
+        video.metadata.voiceId = voiceId;
+      }
+      if (data.model) {
+        video.metadata.modelId = data.model;
+      }
+      if (data.provider === "mock") {
+        video.metadata.generatedBy = "mock";
+      }
+      const withScript = applyScriptToDocument(video);
+      const id = `reel-${Date.now()}`;
+      appendPost(projectId, {
+        id,
+        baseId: id,
+        number: String(project.posts.length + 1).padStart(2, "0"),
+        title: withScript.title,
+        exportKind: "mp4",
+        durationMs: withScript.durationMs,
+        status: "draft",
+        kind: "reel",
+        template: "video",
+        design: emptyDesign(project.brand),
+        video: withScript,
+      });
+      const providerLabel = data.fallbackFromClaude
+        ? "mock (Claude credits unavailable)"
+        : `${data.provider ?? "unknown"}${data.model ? ` · ${data.model}` : ""}`;
+      logActivity(`Generated reel storyboard ${withScript.title} (${providerLabel})`, projectId);
+      return {
+        postId: id,
+        notice: data.notice,
+        mockReason: data.mockReason,
+        fallbackFromClaude: data.fallbackFromClaude,
+      };
+    },
+    [getProject, ops, appendPost, logActivity],
+  );
+
+  const generateVideoVoiceover = useCallback(
+    async (projectId: string, postId: string) => {
+      const project = getProject(projectId);
+      const post = project?.posts.find((p) => p.id === postId);
+      if (!post?.video) return null;
+      const script = getEffectiveVoiceoverScript(post.video);
+      const voiceId = post.video.metadata.voiceId ?? post.video.voiceover?.voiceId ?? "";
+      if (!script.trim()) throw new Error("Voiceover script is empty");
+      if (!voiceId) throw new Error("Select a voice before generating voiceover");
+
+      const validation = validateVoiceoverScript(script);
+      if (!validation.ok) {
+        throw new Error(formatVoiceoverValidationError(validation));
+      }
+
+      const res = await fetch("/api/audio/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: script,
+          voiceId,
+          projectId,
+          reelId: post.video.id,
+        }),
+      });
+      const data = await parseAudioApiResponse<{
+        assetUrl: string;
+        assetId?: string;
+        voiceId?: string;
+        modelId?: string;
+        characterCount?: number;
+        durationMs?: number;
+        metadata?: Record<string, unknown>;
+      }>(res);
+      const next: VideoDocument = {
+        ...cloneVideoDocument(post.video),
+        voiceover: {
+          assetUrl: data.assetUrl,
+          assetId: data.assetId,
+          voiceId: data.voiceId ?? voiceId,
+          modelId: data.modelId ?? "eleven_multilingual_v2",
+          characterCount: data.characterCount,
+          durationMs: data.durationMs,
+          script: sanitizeJsonbString(script),
+          costMetadata: data.metadata ? sanitizeSnapshotForJsonb(data.metadata) : undefined,
+        },
+      };
+      updateVideoDocument(projectId, postId, next);
+      return next;
+    },
+    [getProject, updateVideoDocument],
+  );
+
+  const generateVideoMusic = useCallback(
+    async (projectId: string, postId: string, prompt: string) => {
+      const project = getProject(projectId);
+      const post = project?.posts.find((p) => p.id === postId);
+      if (!post?.video) return null;
+      if (!prompt.trim()) throw new Error("Music prompt is empty");
+
+      const generating: VideoDocument = {
+        ...cloneVideoDocument(post.video),
+        music: {
+          ...(post.video.music ?? { volume: 0.35 }),
+          prompt: sanitizeJsonbString(prompt.trim()),
+          status: "generating",
+          provider: "elevenlabs",
+        },
+      };
+      updateVideoDocument(projectId, postId, generating);
+
+      try {
+        const res = await fetch("/api/audio/music/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: prompt.trim(),
+            durationMs: post.video.durationMs,
+            projectId,
+            reelId: post.video.id,
+          }),
+        });
+        const data = await parseAudioApiResponse<{
+          assetUrl: string;
+          assetId?: string;
+          durationMs?: number;
+          provider?: string;
+          model?: string;
+        }>(res);
+
+        const next: VideoDocument = {
+          ...cloneVideoDocument(generating),
+          music: {
+            assetUrl: data.assetUrl,
+            assetId: data.assetId,
+            prompt: sanitizeJsonbString(prompt.trim()),
+            durationMs: data.durationMs ?? post.video.durationMs,
+            provider: data.provider ?? "elevenlabs",
+            model: data.model ? sanitizeJsonbString(data.model) : undefined,
+            status: "ready",
+            volume: generating.music?.volume ?? 0.35,
+          },
+        };
+        updateVideoDocument(projectId, postId, next);
+        return next;
+      } catch (err) {
+        updateVideoDocument(projectId, postId, {
+          ...generating,
+          music: {
+            ...(generating.music ?? { volume: 0.35 }),
+            status: "failed",
+          },
+        });
+        throw err;
+      }
+    },
+    [getProject, updateVideoDocument],
+  );
+
+  const generateSceneSoundEffect = useCallback(
+    async (projectId: string, postId: string, sceneId: string, prompt: string, sfxId?: string) => {
+      const project = getProject(projectId);
+      const post = project?.posts.find((p) => p.id === postId);
+      if (!post?.video) return null;
+      const scene = post.video.scenes.find((s) => s.id === sceneId);
+      if (!scene) throw new Error("Scene not found");
+      if (!prompt.trim()) throw new Error("Sound effect prompt is empty");
+
+      const id = sfxId ?? uid("sfx");
+      const startMs = scene.startMs;
+      const durationMs = Math.min(scene.durationMs, 4000);
+
+      const existing = post.video.soundEffects ?? [];
+      const generating: VideoDocument = {
+        ...cloneVideoDocument(post.video),
+        soundEffects: [
+          ...existing.filter((s) => s.id !== id),
+          {
+            id,
+            sceneId,
+            prompt: sanitizeJsonbString(prompt.trim()),
+            startMs,
+            durationMs,
+            status: "generating",
+            provider: "elevenlabs",
+          },
+        ],
+      };
+      updateVideoDocument(projectId, postId, generating);
+
+      try {
+        const res = await fetch("/api/audio/sfx/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: prompt.trim(),
+            durationMs,
+            projectId,
+            reelId: post.video.id,
+            sfxId: id,
+          }),
+        });
+        const data = await parseAudioApiResponse<{
+          assetUrl: string;
+          assetId?: string;
+          durationMs?: number;
+          provider?: string;
+          model?: string;
+        }>(res);
+
+        const next: VideoDocument = {
+          ...cloneVideoDocument(generating),
+          soundEffects: (generating.soundEffects ?? []).map((s) =>
+            s.id === id
+              ? {
+                  ...s,
+                  assetUrl: data.assetUrl,
+                  assetId: data.assetId ?? id,
+                  durationMs: data.durationMs ?? durationMs,
+                  provider: data.provider ?? "elevenlabs",
+                  model: data.model ? sanitizeJsonbString(data.model) : undefined,
+                  status: "ready" as const,
+                }
+              : s,
+          ),
+        };
+        updateVideoDocument(projectId, postId, next);
+        return next;
+      } catch (err) {
+        updateVideoDocument(projectId, postId, {
+          ...generating,
+          soundEffects: (generating.soundEffects ?? []).map((s) =>
+            s.id === id ? { ...s, status: "failed" as const } : s,
+          ),
+        });
+        throw err;
+      }
+    },
+    [getProject, updateVideoDocument],
+  );
+
+  const generateVideoCaptions = useCallback(
+    async (projectId: string, postId: string) => {
+      const project = getProject(projectId);
+      const post = project?.posts.find((p) => p.id === postId);
+      if (!post?.video) return null;
+      const next = attachCaptionsToDocument(applyScriptToDocument(post.video), project!.brand);
+      updateVideoDocument(projectId, postId, next);
+      return next;
+    },
+    [getProject, updateVideoDocument],
+  );
+
+  const exportVideoMp4 = useCallback(
+    async (projectId: string, postId: string) => {
+      const project = getProject(projectId);
+      const post = project?.posts.find((p) => p.id === postId);
+      if (!post?.video) return { ok: false, errorMessage: "No video document" };
+      const res = await fetch("/api/video/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document: post.video, projectId, postId }),
+      });
+      return res.json() as Promise<{
+        ok: boolean;
+        publicUrl?: string;
+        errorMessage?: string;
+        requiresWorker?: boolean;
+      }>;
+    },
+    [getProject],
   );
 
   const generateDesignVariations = useCallback(
@@ -1191,7 +1542,10 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       const project = getProject(projectId);
       if (!project) return "";
       const id = `${Date.now()}`;
-      const design = emptyDesign(project.brand, { headline: title });
+      const document = template === "document" ? blankCanvasDocument(project.brand) : undefined;
+      const design = document
+        ? documentToDesignState(document, project.brand)
+        : emptyDesign(project.brand, { headline: title });
       const extra: StudioPost = {
         id,
         baseId: id,
@@ -1203,6 +1557,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         kind,
         template,
         design,
+        document,
         slides:
           kind === "carousel"
             ? [{ id: `${id}-1`, template, title: "Slide 01", design }]
@@ -1215,12 +1570,17 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           patches: {},
           deletedIds: [],
         };
+        const extras = data.extras.some((item) => item.id === id)
+          ? data.extras
+          : [...data.extras, extra];
+        const baseOrder = data.order.length ? data.order : dedupeIds(project.posts.map((post) => post.id));
+        const order = baseOrder.includes(id) ? baseOrder : [...baseOrder, id];
         return {
           ...current,
           posts: {
             ...data,
-            extras: [...data.extras, extra],
-            order: [...(data.order.length ? data.order : project.posts.map((post) => post.id)), id],
+            extras,
+            order: dedupeIds(order),
           },
         };
       });
@@ -2113,6 +2473,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       createBlankDesign,
       createDesignFromTemplate,
       generateDesign,
+      generateStoryboard,
+      updateVideoDocument,
+      generateVideoVoiceover,
+      generateVideoMusic,
+      generateSceneSoundEffect,
+      generateVideoCaptions,
+      exportVideoMp4,
       generateDesignVariations,
       saveDesignAsTemplate,
       setDesignReferences,
@@ -2225,6 +2592,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       createBlankDesign,
       createDesignFromTemplate,
       generateDesign,
+      generateStoryboard,
+      updateVideoDocument,
+      generateVideoVoiceover,
+      generateVideoMusic,
+      generateSceneSoundEffect,
+      generateVideoCaptions,
+      exportVideoMp4,
       generateDesignVariations,
       saveDesignAsTemplate,
       setDesignReferences,

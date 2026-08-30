@@ -71,8 +71,8 @@ export type ProjectAsset = {
 export type LogoPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 export type LogoMode = "isotipo" | "wordmark";
 export type StudioStatus = "active" | "draft";
-export type PostKind = "single" | "carousel";
-export type ExportKind = "jpg" | "png" | "gif";
+export type PostKind = "single" | "carousel" | "reel";
+export type ExportKind = "jpg" | "png" | "gif" | "mp4";
 
 export type CopyField = "headline" | "supporting" | "eyebrow" | "cta" | "labels";
 export type ColorField = "background" | "text" | "accent";
@@ -163,12 +163,15 @@ export type StudioPost = {
   design: DesignState;
   /** Structured design document — source of truth for document-mode posts */
   document?: DesignDocument;
+  /** Structured video document — source of truth for reel/video posts */
+  video?: VideoDocument;
   /** Posts referenced for AI generation / visual follow */
   referencePostIds?: string[];
   slides?: CarouselSlide[];
 };
 
 export type DesignDocument = import("@/core/design/document").DesignDocument;
+export type VideoDocument = import("@/core/video/document").VideoDocument;
 
 export type PostRenderProps = {
   design: DesignState;
@@ -203,6 +206,7 @@ export type PostPatch = {
   title?: string;
   design?: Partial<DesignState>;
   document?: DesignDocument;
+  video?: VideoDocument;
   referencePostIds?: string[];
   slideOrder?: string[];
   extraSlides?: CarouselSlide[];

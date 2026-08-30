@@ -26,6 +26,10 @@ export function useProject() {
   return project;
 }
 
+export function useOptionalProject() {
+  return useContext(ProjectContext);
+}
+
 export function useBrand() {
   const project = useProject();
   const format = getFormat(project.formatId);
