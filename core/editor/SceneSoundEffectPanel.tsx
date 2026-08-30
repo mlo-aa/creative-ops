@@ -4,6 +4,7 @@ import type { VideoDocument, VideoScene, VideoSoundEffect } from "@/core/video/d
 import { uid } from "@/core/video/document";
 import { formatDurationMs } from "@/core/video/voiceover";
 import { btnGhost, btnPrimary, inputClass } from "@/core/ui/OpsField";
+import { CollapsibleSection } from "@/core/ui/workspace-ui";
 import { useEffect, useMemo, useState } from "react";
 
 export function SceneSoundEffectPanel({
@@ -14,6 +15,7 @@ export function SceneSoundEffectPanel({
   postId,
   onDocChange,
   generateSoundEffect,
+  embedded = false,
 }: {
   scene: VideoScene;
   sceneIndex: number;
@@ -28,6 +30,7 @@ export function SceneSoundEffectPanel({
     prompt: string,
     sfxId?: string,
   ) => Promise<VideoDocument | null>;
+  embedded?: boolean;
 }) {
   const sceneEffects = useMemo(
     () => (doc.soundEffects ?? []).filter((s) => s.sceneId === scene.id),
@@ -49,10 +52,8 @@ export function SceneSoundEffectPanel({
     });
   }
 
-  return (
-    <div className="space-y-2 border-t border-white/10 pt-3">
-      <p className="text-[10px] uppercase tracking-widest opacity-40">Sound effects</p>
-
+  const inner = (
+    <>
       {sceneEffects.map((sfx) => (
         <SoundEffectRow
           key={sfx.id}
@@ -118,6 +119,25 @@ export function SceneSoundEffectPanel({
           + Add sound effect
         </button>
       )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <CollapsibleSection
+        title="Scene sound effects"
+        defaultOpen={sceneEffects.length > 0 || adding}
+        summary={<span>{sceneEffects.length ? `${sceneEffects.length} effect(s)` : "None"}</span>}
+      >
+        {inner}
+      </CollapsibleSection>
+    );
+  }
+
+  return (
+    <div className="space-y-2 border-t border-white/10 pt-3">
+      <p className="text-[10px] uppercase tracking-widest opacity-40">Sound effects</p>
+      {inner}
     </div>
   );
 }
@@ -139,12 +159,11 @@ function SoundEffectRow({
   useEffect(() => setPrompt(sfx.prompt), [sfx.prompt]);
 
   return (
-    <div className="rounded border border-white/10 p-2 space-y-1">
+    <div className="space-y-1 rounded border border-white/10 p-2">
       <textarea className={inputClass} rows={2} value={prompt} onChange={(e) => setPrompt(e.target.value)} />
       <p className="text-[10px] opacity-40">
         {sfx.status}
         {sfx.durationMs ? ` · ${formatDurationMs(sfx.durationMs)}` : ""}
-        {sfx.startMs != null ? ` · starts ${formatDurationMs(sfx.startMs)}` : ""}
       </p>
       {ready && sfx.assetUrl ? <audio controls src={sfx.assetUrl} className="w-full" /> : null}
       <div className="flex flex-wrap gap-1">

@@ -1,7 +1,7 @@
 import { formatElevenLabsUiMessage } from "@/core/video/audio/elevenlabs-errors";
 import { downloadAudioUrl } from "@/core/video/production/export-kit";
 import type { VideoDocument } from "@/core/video/document";
-import { formatDurationMs, getVoiceoverTimingStatus } from "@/core/video/voiceover";
+import { formatDurationMs } from "@/core/video/voiceover";
 import {
   getEffectiveVoiceoverScript,
   hasManualVoiceoverOverride,
@@ -17,7 +17,8 @@ import {
   narrationExceedsReel,
   validateVoiceoverScript,
 } from "@/core/video/script-validation";
-import { btnGhost, btnPrimary, inputClass } from "@/core/ui/OpsField";
+import { btnPrimary, inputClass } from "@/core/ui/OpsField";
+import { CollapsibleSection, DropdownMenu, MenuItem } from "@/core/ui/workspace-ui";
 import { useEffect, useMemo, useState } from "react";
 
 type Voice = { voiceId: string; name: string; previewUrl: string | null };
@@ -31,6 +32,7 @@ export function ReelVoiceoverPanel({
   onDocChange,
   onResetToSceneScripts,
   generateVoiceover,
+  embedded = false,
 }: {
   doc: VideoDocument;
   projectId: string;
@@ -40,6 +42,7 @@ export function ReelVoiceoverPanel({
   onDocChange: (next: VideoDocument) => void;
   onResetToSceneScripts: (next: VideoDocument) => void;
   generateVoiceover: (projectId: string, postId: string) => Promise<VideoDocument | null>;
+  embedded?: boolean;
 }) {
   const [voBusy, setVoBusy] = useState(false);
   const [voError, setVoError] = useState("");
@@ -62,7 +65,6 @@ export function ReelVoiceoverPanel({
   const charCount = useMemo(() => scriptCharacterCount(scriptText), [scriptText]);
   const estimatedMs = useMemo(() => estimateNarrationDurationMs(scriptText), [scriptText]);
   const validation = useMemo(() => validateVoiceoverScript(scriptText), [scriptText]);
-  const timingStatus = useMemo(() => getVoiceoverTimingStatus(doc), [doc]);
   const exceedsEstimate = narrationExceedsReel(scriptText, doc.durationMs);
   const voiceName = voices.find((v) => v.voiceId === (doc.voiceover?.voiceId ?? voiceId))?.name;
   const sceneScriptsChanged = sceneScriptsChangedSinceManualOverride(doc);
@@ -80,16 +82,40 @@ export function ReelVoiceoverPanel({
     }
   }
 
-  return (
-    <div className="space-y-2 border-t border-white/10 pt-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] uppercase tracking-widest opacity-40">Voiceover script</p>
-        {manualOverride ? (
-          <span className="text-[10px] opacity-35">Manual edit</span>
-        ) : (
-          <span className="text-[10px] opacity-35">From scenes</span>
-        )}
-      </div>
+  const hasAudio = Boolean(doc.voiceover?.assetUrl);
+  const statusLabel = hasAudio
+    ? audioStale
+      ? "Stale"
+      : "Ready"
+    : voBusy
+      ? "Generating"
+      : "Not generated";
+
+  async function handleGenerate() {
+    setVoBusy(true);
+    setVoError("");
+    try {
+      if (!voiceId) {
+        setVoError("Select a voice before generating voiceover.");
+        return;
+      }
+      const preCheck = validateVoiceoverScript(scriptText);
+      if (!preCheck.ok) {
+        setVoError(formatVoiceoverValidationError(preCheck));
+        return;
+      }
+      onDocChange(setVoiceoverManualOverride({ ...doc, metadata: { ...doc.metadata, voiceId } }, scriptText));
+      const updated = await generateVoiceover(projectId, postId);
+      if (updated) onDocChange(updated);
+    } catch (e) {
+      setVoError(e instanceof Error ? e.message : "Voiceover failed");
+    } finally {
+      setVoBusy(false);
+    }
+  }
+
+  const body = (
+    <>
 
       {voicesError ? <p className="text-xs text-amber-200/90">{voicesError}</p> : null}
       {voices.length === 0 && !voicesError ? (
@@ -122,16 +148,6 @@ export function ReelVoiceoverPanel({
         </p>
       ) : null}
 
-      {manualOverride ? (
-        <button
-          type="button"
-          className={`${btnGhost} w-full text-xs`}
-          onClick={() => onResetToSceneScripts(resetVoiceoverToSceneScripts(doc))}
-        >
-          Reset to scene scripts
-        </button>
-      ) : null}
-
       {!validation.ok ? (
         <div className="rounded border border-amber-500/30 bg-amber-950/30 px-2 py-1.5 text-xs text-amber-100 whitespace-pre-line">
           {formatVoiceoverValidationError(validation)}
@@ -153,61 +169,71 @@ export function ReelVoiceoverPanel({
 
       {voError ? <p className="text-xs text-red-400 whitespace-pre-line">{voError}</p> : null}
 
-      <button
-        type="button"
-        className={btnPrimary}
-        disabled={voBusy || !scriptText.trim() || !voiceId || !validation.ok}
-        onClick={async () => {
-          setVoBusy(true);
-          setVoError("");
-          try {
-            if (!voiceId) {
-              setVoError("Select a voice before generating voiceover.");
-              return;
-            }
-            const preCheck = validateVoiceoverScript(scriptText);
-            if (!preCheck.ok) {
-              setVoError(formatVoiceoverValidationError(preCheck));
-              return;
-            }
-            onDocChange(setVoiceoverManualOverride({ ...doc, metadata: { ...doc.metadata, voiceId } }, scriptText));
-            const updated = await generateVoiceover(projectId, postId);
-            if (updated) onDocChange(updated);
-          } catch (e) {
-            setVoError(e instanceof Error ? e.message : "Voiceover failed");
-          } finally {
-            setVoBusy(false);
-          }
-        }}
-      >
-        {voBusy ? "Generating voiceover…" : doc.voiceover?.assetUrl ? "Regenerate voiceover" : "Generate voiceover"}
-      </button>
-
-      {doc.voiceover?.assetUrl ? (
-        <div className="space-y-1">
+      {hasAudio ? (
+        <div className="space-y-2">
           <audio
             controls
-            src={doc.voiceover.assetUrl}
+            src={doc.voiceover!.assetUrl}
             className="w-full"
             onLoadedMetadata={(e) => onAudioMetadata(e.currentTarget.duration)}
           />
-          <p className="text-[10px] opacity-40">
-            {doc.voiceover.durationMs ? `Duration: ${formatDurationMs(doc.voiceover.durationMs)}` : ""}
-            {voiceName ? ` · Voice: ${voiceName}` : doc.voiceover.voiceId ? ` · Voice ID: ${doc.voiceover.voiceId}` : ""}
-            {doc.voiceover.modelId ? ` · Model: ${doc.voiceover.modelId}` : ""}
-            {timingStatus?.exceedsReel ? " · exceeds reel" : ""}
-          </p>
-          <button
-            type="button"
-            className={`${btnGhost} w-full text-xs`}
-            onClick={() => downloadAudioUrl(doc.voiceover!.assetUrl!, "voiceover.mp3")}
-          >
-            Download voiceover
-          </button>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] opacity-40">
+              {doc.voiceover?.durationMs ? formatDurationMs(doc.voiceover.durationMs) : ""}
+              {voiceName ? ` · ${voiceName}` : ""}
+              {manualOverride ? " · manual edit" : ""}
+            </p>
+            <DropdownMenu
+              label="Voiceover actions"
+              trigger={
+                <span className="inline-flex h-7 items-center border border-white/15 px-2 text-[10px] uppercase opacity-60">
+                  ···
+                </span>
+              }
+            >
+              <MenuItem onClick={() => void handleGenerate()} disabled={voBusy || !validation.ok}>
+                Regenerate
+              </MenuItem>
+              <MenuItem onClick={() => downloadAudioUrl(doc.voiceover!.assetUrl!, "voiceover.mp3")}>
+                Download
+              </MenuItem>
+              {manualOverride ? (
+                <MenuItem onClick={() => onResetToSceneScripts(resetVoiceoverToSceneScripts(doc))}>
+                  Reset to scene scripts
+                </MenuItem>
+              ) : null}
+            </DropdownMenu>
+          </div>
         </div>
       ) : (
-        <p className="text-xs opacity-35">No voiceover generated yet</p>
+        <button
+          type="button"
+          className={`${btnPrimary} w-full`}
+          disabled={voBusy || !scriptText.trim() || !voiceId || !validation.ok}
+          onClick={() => void handleGenerate()}
+        >
+          {voBusy ? "Generating…" : "Generate voiceover"}
+        </button>
       )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <CollapsibleSection
+        title="Voiceover"
+        defaultOpen={!hasAudio || audioStale}
+        summary={<span>{statusLabel}</span>}
+      >
+        {body}
+      </CollapsibleSection>
+    );
+  }
+
+  return (
+    <div className="space-y-2 border-t border-white/10 pt-4">
+      <p className="text-[10px] uppercase tracking-widest opacity-40">Voiceover</p>
+      {body}
     </div>
   );
 }

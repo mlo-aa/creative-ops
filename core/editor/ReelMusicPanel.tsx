@@ -3,7 +3,8 @@ import { downloadAudioUrl } from "@/core/video/production/export-kit";
 import type { BrandProfile } from "@/core/types";
 import type { VideoDocument } from "@/core/video/document";
 import { formatDurationMs } from "@/core/video/voiceover";
-import { btnGhost, btnPrimary, inputClass } from "@/core/ui/OpsField";
+import { btnPrimary, inputClass } from "@/core/ui/OpsField";
+import { CollapsibleSection, DropdownMenu, MenuItem } from "@/core/ui/workspace-ui";
 import { useEffect, useState } from "react";
 
 export function ReelMusicPanel({
@@ -13,6 +14,7 @@ export function ReelMusicPanel({
   postId,
   onDocChange,
   generateMusic,
+  embedded = false,
 }: {
   doc: VideoDocument;
   brand: BrandProfile;
@@ -20,6 +22,7 @@ export function ReelMusicPanel({
   postId: string;
   onDocChange: (next: VideoDocument) => void;
   generateMusic: (projectId: string, postId: string, prompt: string) => Promise<VideoDocument | null>;
+  embedded?: boolean;
 }) {
   const suggested = buildSuggestedMusicPrompt({ doc, brand });
   const [prompt, setPrompt] = useState(doc.music?.prompt ?? suggested);
@@ -31,67 +34,95 @@ export function ReelMusicPanel({
   }, [doc.id, suggested, doc.music?.prompt]);
 
   const ready = doc.music?.status === "ready" && Boolean(doc.music.assetUrl);
+  const planRestricted =
+    !ready &&
+    (error.toLowerCase().includes("plan") || error.toLowerCase().includes("not available"));
+
+  async function handleGenerate() {
+    setBusy(true);
+    setError("");
+    try {
+      const updated = await generateMusic(projectId, postId, prompt.trim());
+      if (updated) onDocChange(updated);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Music generation failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const statusLabel = ready ? "Ready" : busy ? "Generating" : planRestricted ? "Unavailable on plan" : "Not generated";
+
+  if (planRestricted && embedded) {
+    return (
+      <CollapsibleSection title="Music" defaultOpen={false} summary={<span>{statusLabel}</span>}>
+        <p className="text-xs opacity-55">
+          Music generation is not available on your current ElevenLabs plan. Voiceover and sound effects still work.
+        </p>
+      </CollapsibleSection>
+    );
+  }
+
+  const body = (
+    <>
+      {!ready ? (
+        <label className="block text-xs opacity-60">
+          Prompt
+          <textarea className={`${inputClass} mt-1`} rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        </label>
+      ) : null}
+      {error ? <p className="text-xs text-red-400">{error}</p> : null}
+
+      {ready && doc.music?.assetUrl ? (
+        <div className="space-y-2">
+          <audio controls src={doc.music.assetUrl} className="w-full" />
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] opacity-40">
+              {doc.music.durationMs ? formatDurationMs(doc.music.durationMs) : "Ready"}
+            </p>
+            <DropdownMenu
+              label="Music actions"
+              trigger={
+                <span className="inline-flex h-7 items-center border border-white/15 px-2 text-[10px] uppercase opacity-60">
+                  ···
+                </span>
+              }
+            >
+              <MenuItem onClick={() => void handleGenerate()} disabled={busy}>
+                Regenerate
+              </MenuItem>
+              <MenuItem onClick={() => doc.music?.assetUrl && downloadAudioUrl(doc.music.assetUrl, "music.mp3")}>
+                Download
+              </MenuItem>
+              <MenuItem onClick={() => onDocChange({ ...doc, music: undefined })}>Remove</MenuItem>
+            </DropdownMenu>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={`${btnPrimary} w-full`}
+          disabled={busy || !prompt.trim()}
+          onClick={() => void handleGenerate()}
+        >
+          {busy ? "Generating…" : "Generate music"}
+        </button>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <CollapsibleSection title="Music" defaultOpen={!ready && !planRestricted} summary={<span>{statusLabel}</span>}>
+        {body}
+      </CollapsibleSection>
+    );
+  }
 
   return (
     <div className="space-y-2 border-t border-white/10 pt-4">
       <p className="text-[10px] uppercase tracking-widest opacity-40">Music</p>
-      <label className="block text-xs opacity-60">
-        Generation prompt
-        <textarea className={`${inputClass} mt-1`} rows={4} value={prompt} onChange={(e) => setPrompt(e.target.value)} />
-      </label>
-      {doc.music?.status ? (
-        <p className="text-[10px] opacity-40">
-          Status: {doc.music.status}
-          {doc.music.provider ? ` · ${doc.music.provider}` : ""}
-          {doc.music.model ? ` · ${doc.music.model}` : ""}
-        </p>
-      ) : null}
-      {error ? <p className="text-xs text-red-400">{error}</p> : null}
-      <button
-        type="button"
-        className={btnPrimary}
-        disabled={busy || !prompt.trim()}
-        onClick={async () => {
-          setBusy(true);
-          setError("");
-          try {
-            const updated = await generateMusic(projectId, postId, prompt.trim());
-            if (updated) onDocChange(updated);
-          } catch (e) {
-            setError(e instanceof Error ? e.message : "Music generation failed");
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        {busy ? "Generating music…" : ready ? "Regenerate music" : "Generate music"}
-      </button>
-      {ready && doc.music?.assetUrl ? (
-        <div className="space-y-1">
-          <audio controls src={doc.music.assetUrl} className="w-full" />
-          {doc.music?.durationMs ? (
-            <p className="text-[10px] opacity-40">Duration: {formatDurationMs(doc.music.durationMs)}</p>
-          ) : null}
-          <div className="flex flex-wrap gap-1">
-            <button
-              type="button"
-              className={btnGhost}
-              onClick={() => doc.music?.assetUrl && downloadAudioUrl(doc.music.assetUrl, "music.mp3")}
-            >
-              Download
-            </button>
-            <button
-              type="button"
-              className={btnGhost}
-              onClick={() => onDocChange({ ...doc, music: undefined })}
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      ) : (
-        <p className="text-xs opacity-35">No music generated yet</p>
-      )}
+      {body}
     </div>
   );
 }

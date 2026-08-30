@@ -3,30 +3,17 @@
 import { ProjectScope } from "@/core/project/context";
 import { useStudio } from "@/core/store";
 import { contextLevelLabel, computeContextLevel } from "@/core/ops/completeness";
+import {
+  activeProjectTab,
+  isProjectStudioPath,
+  PROJECT_STUDIO_TABS,
+  PROJECT_WORKSPACE_TABS,
+  projectSectionSubNav,
+} from "@/core/ui/nav-config";
+import { SubNav } from "@/core/ui/workspace-ui";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-
-const WORKSPACE_TABS = [
-  { href: "ideas", label: "Ideas" },
-  { href: "overview", label: "Overview" },
-  { href: "strategy", label: "Strategy" },
-  { href: "sources", label: "Sources" },
-  { href: "links", label: "Links" },
-  { href: "references", label: "References" },
-  { href: "phases", label: "Phases" },
-  { href: "deliverables", label: "Deliverables" },
-  { href: "branding", label: "Branding" },
-  { href: "content", label: "Content" },
-];
-
-const STUDIO_TABS = [
-  { href: "feed", label: "Feed" },
-  { href: "posts", label: "Designs" },
-  { href: "templates", label: "Templates" },
-  { href: "assets", label: "Assets" },
-  { href: "settings", label: "Settings" },
-];
 
 export default function ProjectLayout({ children }: { children: ReactNode }) {
   const params = useParams<{ projectId: string }>();
@@ -36,12 +23,9 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
   const opsProject = getOpsProject(params.projectId);
   const contextLevel = computeContextLevel(ops, params.projectId, project);
 
-  const inStudio =
-    STUDIO_TABS.some(
-      (t) =>
-        pathname === `/projects/${params.projectId}/${t.href}` ||
-        pathname.startsWith(`/projects/${params.projectId}/${t.href}/`),
-    ) || pathname.includes("/posts/");
+  const inStudio = isProjectStudioPath(pathname, params.projectId);
+  const activeTab = activeProjectTab(pathname, params.projectId);
+  const subNavItems = activeTab ? projectSectionSubNav(activeTab.sections) : [];
 
   if (!ready) return <p className="p-10 opacity-50">Loading…</p>;
   if (!project) {
@@ -61,24 +45,32 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
         <header className="border-b border-white/10 px-6 py-4">
           <div className="mx-auto flex max-w-[1400px] flex-wrap items-start justify-between gap-4">
             <div>
-              <Link href="/projects" className="text-[10px] tracking-[0.14em] uppercase opacity-40">
+              <Link
+                href="/projects"
+                className="text-[10px] tracking-[0.14em] uppercase opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+              >
                 ← Projects
               </Link>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 {opsProject ? (
-                  <>
-                    <span className="text-[10px] tracking-[0.18em] uppercase opacity-50" style={{ color: opsProject.color }}>
-                      {opsProject.code}
-                    </span>
-                  </>
+                  <span
+                    className="text-[10px] tracking-[0.18em] uppercase opacity-50"
+                    style={{ color: opsProject.color }}
+                  >
+                    {opsProject.code}
+                  </span>
                 ) : null}
                 <h1 className="text-lg tracking-[-0.02em]">{project.name}</h1>
                 {opsProject ? (
                   <>
                     <span className="text-xs opacity-40">{opsProject.clientName}</span>
-                    <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">{(opsProject.types ?? [opsProject.type]).join(", ")}</span>
+                    <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">
+                      {(opsProject.types ?? [opsProject.type]).join(", ")}
+                    </span>
                     <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">{opsProject.status}</span>
-                    <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">{contextLevelLabel(contextLevel)}</span>
+                    <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">
+                      {contextLevelLabel(contextLevel)}
+                    </span>
                   </>
                 ) : null}
               </div>
@@ -88,19 +80,26 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <nav className="mx-auto mt-5 flex max-w-[1400px] flex-wrap gap-1">
-            {WORKSPACE_TABS.map((item) => {
+          <nav aria-label="Project" className="mx-auto mt-5 flex max-w-[1400px] flex-wrap gap-1">
+            {PROJECT_WORKSPACE_TABS.map((item) => {
               const href = `/projects/${project.id}/${item.href}`;
-              const active = pathname === href || pathname.startsWith(`${href}/`);
+              const sectionActive = item.sections.some((slug) => {
+                const p = `/projects/${project.id}/${slug}`;
+                return pathname === p || pathname.startsWith(`${p}/`);
+              });
               return (
                 <Link
                   key={item.href}
                   href={href}
-                  className="px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase"
+                  aria-current={sectionActive && !inStudio ? "page" : undefined}
+                  className="px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
                   style={{
-                    opacity: active && !inStudio ? 1 : 0.4,
-                    background: active && !inStudio ? "rgba(255,255,255,0.06)" : "transparent",
-                    borderBottom: active && !inStudio ? `2px solid ${opsProject?.color ?? "#fff"}` : "2px solid transparent",
+                    opacity: sectionActive && !inStudio ? 1 : 0.4,
+                    background: sectionActive && !inStudio ? "rgba(255,255,255,0.06)" : "transparent",
+                    borderBottom:
+                      sectionActive && !inStudio
+                        ? `2px solid ${opsProject?.color ?? "#fff"}`
+                        : "2px solid transparent",
                   }}
                 >
                   {item.label}
@@ -109,7 +108,8 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
             })}
             <Link
               href={`/projects/${project.id}/feed`}
-              className="px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase"
+              aria-current={inStudio ? "page" : undefined}
+              className="px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
               style={{
                 opacity: inStudio ? 1 : 0.4,
                 background: inStudio ? "rgba(255,255,255,0.06)" : "transparent",
@@ -120,18 +120,22 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
             </Link>
           </nav>
 
+          {!inStudio && activeTab ? (
+            <SubNav projectId={project.id} items={subNavItems} pathname={pathname} />
+          ) : null}
+
           {inStudio ? (
-            <nav className="mx-auto mt-2 flex max-w-[1400px] flex-wrap gap-3 border-t border-white/5 pt-2">
-              {STUDIO_TABS.map((item) => {
+            <nav aria-label="Studio" className="mx-auto mt-2 flex max-w-[1400px] flex-wrap gap-3 border-t border-white/5 pt-2">
+              {PROJECT_STUDIO_TABS.map((item) => {
                 const href = `/projects/${project.id}/${item.href}`;
                 const active =
-                  pathname === href ||
-                  (item.href === "posts" && pathname.includes("/posts/"));
+                  pathname === href || (item.href === "posts" && pathname.includes("/posts/"));
                 return (
                   <Link
                     key={item.href}
                     href={href}
-                    className="text-[10px] tracking-[0.12em] uppercase"
+                    aria-current={active ? "page" : undefined}
+                    className="text-[10px] tracking-[0.12em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
                     style={{ opacity: active ? 0.9 : 0.35 }}
                   >
                     {item.label}

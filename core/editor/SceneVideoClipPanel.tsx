@@ -14,6 +14,7 @@ import {
   disabledVideoClipProvider,
 } from "@/core/video/clip/provider";
 import { btnGhost, btnPrimary, inputClass } from "@/core/ui/OpsField";
+import { CollapsibleSection } from "@/core/ui/workspace-ui";
 import { useEffect, useState } from "react";
 
 export function SceneVideoClipPanel({
@@ -22,12 +23,14 @@ export function SceneVideoClipPanel({
   brand,
   projectId,
   onSceneChange,
+  embedded = false,
 }: {
   scene: VideoScene;
   doc: VideoDocument;
   brand: BrandProfile;
   projectId: string;
   onSceneChange: (next: VideoScene) => void;
+  embedded?: boolean;
 }) {
   const suggested = buildSuggestedClipPrompt({ scene, brand, metadata: doc.metadata });
   const [prompt, setPrompt] = useState(
@@ -94,23 +97,20 @@ export function SceneVideoClipPanel({
     onSceneChange(removeVideoClipBackground(scene, brand.colors[0]?.hex ?? "#171717"));
   }
 
-  return (
-    <div className="space-y-2 border-t border-white/10 pt-3">
-      <p className="text-[10px] uppercase tracking-widest opacity-40">Video clip</p>
-      <label className="block text-xs opacity-60">
-        Generation prompt
-        <textarea
-          className={`${inputClass} mt-1`}
-          rows={4}
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-      </label>
-      {scene.background?.videoClip?.generationStatus ? (
-        <p className="text-[10px] opacity-40">
-          Status: {scene.background.videoClip.generationStatus}
-          {scene.background.videoClip.provider ? ` · ${scene.background.videoClip.provider}` : ""}
-        </p>
+  const statusLabel = ready ? "Ready" : busy ? "Generating" : hasClip ? "Failed" : "Not generated";
+
+  const body = (
+    <>
+      {!ready ? (
+        <label className="block text-xs opacity-60">
+          Generation prompt
+          <textarea
+            className={`${inputClass} mt-1`}
+            rows={3}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+        </label>
       ) : null}
       {clipError ? <p className="text-xs text-amber-200/90">{clipError}</p> : null}
       {ready ? (
@@ -125,7 +125,7 @@ export function SceneVideoClipPanel({
       ) : (
         <button
           type="button"
-          className={btnPrimary}
+          className={`${btnPrimary} w-full`}
           disabled={busy || !prompt.trim()}
           onClick={() => void handleGenerate()}
         >
@@ -137,6 +137,21 @@ export function SceneVideoClipPanel({
           Remove video
         </button>
       ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <CollapsibleSection title="Video clip" defaultOpen={hasClip} summary={<span>{statusLabel}</span>}>
+        {body}
+      </CollapsibleSection>
+    );
+  }
+
+  return (
+    <div className="space-y-2 border-t border-white/10 pt-3">
+      <p className="text-[10px] uppercase tracking-widest opacity-40">Video clip</p>
+      {body}
     </div>
   );
 }
