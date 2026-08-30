@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
     "@remotion/compositor-win32-x64-msvc",
     "esbuild",
   ],
+  async redirects() {
+    return [
+      {
+        source: "/projects/:projectId/brand",
+        destination: "/projects/:projectId/branding",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

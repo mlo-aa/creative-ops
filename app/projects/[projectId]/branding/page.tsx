@@ -1,6 +1,6 @@
 "use client";
 
-import BrandPage from "@/app/projects/[projectId]/brand/page";
+import { BrandSetupPanel } from "@/core/project/BrandSetupPanel";
 import { useProject } from "@/core/project/context";
 import { useStudio } from "@/core/store";
 import Link from "next/link";
@@ -23,16 +23,26 @@ export default function ProjectBrandingPage() {
         <SectionHeader
           title="Brand extensions"
           action={
-            <Link href={`/projects/${project.id}/assets`} className="text-[11px] tracking-[0.12em] uppercase opacity-50">
+            <Link
+              href={`/projects/${project.id}/assets`}
+              className="text-[11px] tracking-[0.12em] uppercase opacity-50"
+            >
               Asset library →
             </Link>
           }
         />
         <div className="mx-auto max-w-3xl space-y-8">
           <AutosaveField label="Voice & tone" value={ext.voiceTone} onSave={(v) => save({ voiceTone: v })} rows={4} />
-          <AutosaveField label="Typography notes" value={ext.typographyNotes} onSave={(v) => save({ typographyNotes: v })} rows={3} />
+          <AutosaveField
+            label="Typography notes"
+            value={ext.typographyNotes}
+            onSave={(v) => save({ typographyNotes: v })}
+            rows={3}
+          />
           <label className="block">
-            <span className="mb-1.5 block text-[11px] tracking-[0.14em] uppercase opacity-45">Keywords (comma-separated)</span>
+            <span className="mb-1.5 block text-[11px] tracking-[0.14em] uppercase opacity-45">
+              Keywords (comma-separated)
+            </span>
             <input
               className="w-full border border-white/10 bg-[#141414] px-3 py-2 text-sm"
               value={ext.keywords.join(", ")}
@@ -43,7 +53,7 @@ export default function ProjectBrandingPage() {
           </label>
         </div>
       </main>
-      <BrandPage />
+      <BrandSetupPanel />
     </div>
   );
 }

@@ -9,6 +9,7 @@
     "lint": "eslint",
     "audit:design": "npx tsx scripts/audit-design-workflow.mts",
     "audit:video": "npx tsx scripts/audit-video-workflow.mts",
+    "audit:project-routes": "npx tsx scripts/audit-project-routes.mts",
     "audit:persistence": "npx tsx scripts/audit-persistence.mts",
     "audit:live-schema": "npx tsx scripts/audit-live-schema.mts"
   },

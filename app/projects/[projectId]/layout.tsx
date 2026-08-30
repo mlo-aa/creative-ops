@@ -21,8 +21,6 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
   const { ready, getProject, getOpsProject, ops } = useStudio();
   const project = getProject(params.projectId);
   const opsProject = getOpsProject(params.projectId);
-  const contextLevel = computeContextLevel(ops, params.projectId, project);
-
   const inStudio = isProjectStudioPath(pathname, params.projectId);
   const activeTab = activeProjectTab(pathname, params.projectId);
   const subNavItems = activeTab ? projectSectionSubNav(activeTab.sections) : [];
@@ -38,6 +36,8 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
       </main>
     );
   }
+
+  const contextLevel = computeContextLevel(ops, params.projectId, project);
 
   return (
     <ProjectScope project={project}>
@@ -83,8 +83,8 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
           <nav aria-label="Project" className="mx-auto mt-5 flex max-w-[1400px] flex-wrap gap-1">
             {PROJECT_WORKSPACE_TABS.map((item) => {
               const href = `/projects/${project.id}/${item.href}`;
-              const sectionActive = item.sections.some((slug) => {
-                const p = `/projects/${project.id}/${slug}`;
+              const sectionActive = item.sections.some((section) => {
+                const p = `/projects/${project.id}/${section.slug}`;
                 return pathname === p || pathname.startsWith(`${p}/`);
               });
               return (

@@ -32,22 +32,84 @@ export const GLOBAL_NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+export type ProjectSection = {
+  slug: string;
+  label: string;
+  /** Legacy slug that should redirect to this section's canonical slug. */
+  redirectTo?: string;
+  /** Omit from section sub-nav (legacy alias only). */
+  hideFromSubNav?: boolean;
+};
+
 export type ProjectTab = {
   href: string;
   label: string;
-  /** Route slugs that belong to this section (first is default). */
-  sections: string[];
+  sections: ProjectSection[];
 };
 
 /** Consolidated project workspace tabs (~6 primary areas). */
 export const PROJECT_WORKSPACE_TABS: ProjectTab[] = [
-  { href: "overview", label: "Overview", sections: ["overview"] },
-  { href: "strategy", label: "Strategy", sections: ["strategy", "phases"] },
-  { href: "branding", label: "Brand", sections: ["branding", "brand"] },
-  { href: "sources", label: "Knowledge", sections: ["sources", "links", "references"] },
-  { href: "content", label: "Content", sections: ["content", "ideas"] },
-  { href: "deliverables", label: "Deliverables", sections: ["deliverables"] },
+  {
+    href: "overview",
+    label: "Overview",
+    sections: [{ slug: "overview", label: "Overview" }],
+  },
+  {
+    href: "strategy",
+    label: "Strategy",
+    sections: [
+      { slug: "strategy", label: "Strategy" },
+      { slug: "phases", label: "Phases" },
+    ],
+  },
+  {
+    href: "branding",
+    label: "Brand",
+    sections: [
+      { slug: "branding", label: "Brand setup" },
+      { slug: "brand", label: "Brand setup", redirectTo: "branding", hideFromSubNav: true },
+    ],
+  },
+  {
+    href: "sources",
+    label: "Knowledge",
+    sections: [
+      { slug: "sources", label: "Sources" },
+      { slug: "links", label: "Links" },
+      { slug: "references", label: "References" },
+    ],
+  },
+  {
+    href: "content",
+    label: "Content",
+    sections: [
+      { slug: "content", label: "Content plan" },
+      { slug: "ideas", label: "Ideas" },
+    ],
+  },
+  {
+    href: "deliverables",
+    label: "Deliverables",
+    sections: [{ slug: "deliverables", label: "Deliverables" }],
+  },
 ];
+
+/** All workspace slugs that must resolve for backward compatibility. */
+export const PROJECT_WORKSPACE_SLUGS = [
+  "overview",
+  "strategy",
+  "phases",
+  "branding",
+  "brand",
+  "sources",
+  "links",
+  "references",
+  "content",
+  "ideas",
+  "deliverables",
+] as const;
+
+export type ProjectWorkspaceSlug = (typeof PROJECT_WORKSPACE_SLUGS)[number];
 
 export const PROJECT_STUDIO_TABS: NavItem[] = [
   { href: "feed", label: "Feed" },
@@ -57,28 +119,26 @@ export const PROJECT_STUDIO_TABS: NavItem[] = [
   { href: "settings", label: "Settings" },
 ];
 
-export function projectSectionSubNav(sectionSlugs: string[]): NavItem[] {
-  const labels: Record<string, string> = {
-    strategy: "Strategy",
-    phases: "Phases",
-    branding: "Brand setup",
-    brand: "Brand setup",
-    sources: "Sources",
-    links: "Links",
-    references: "References",
-    content: "Content plan",
-    ideas: "Ideas",
-  };
-  return sectionSlugs.map((slug) => ({
-    href: slug,
-    label: labels[slug] ?? slug,
-  }));
+export const PROJECT_STUDIO_SLUGS = ["feed", "posts", "templates", "assets", "settings"] as const;
+
+/** Legacy slugs that redirect to a canonical workspace route. */
+export const PROJECT_LEGACY_REDIRECTS: Record<string, string> = {
+  brand: "branding",
+};
+
+export function projectSectionSubNav(sections: ProjectSection[]): NavItem[] {
+  return sections
+    .filter((section) => !section.hideFromSubNav)
+    .map((section) => ({
+      href: section.slug,
+      label: section.label,
+    }));
 }
 
 export function activeProjectTab(pathname: string, projectId: string): ProjectTab | undefined {
   for (const tab of PROJECT_WORKSPACE_TABS) {
-    for (const slug of tab.sections) {
-      const prefix = `/projects/${projectId}/${slug}`;
+    for (const section of tab.sections) {
+      const prefix = `/projects/${projectId}/${section.slug}`;
       if (pathname === prefix || pathname.startsWith(`${prefix}/`)) return tab;
     }
   }
@@ -91,4 +151,20 @@ export function isProjectStudioPath(pathname: string, projectId: string): boolea
     const prefix = `/projects/${projectId}/${t.href}`;
     return pathname === prefix || pathname.startsWith(`${prefix}/`);
   });
+}
+
+export function resolveLegacyProjectRedirect(pathname: string, projectId: string): string | null {
+  const prefix = `/projects/${projectId}/`;
+  if (!pathname.startsWith(prefix)) return null;
+  const rest = pathname.slice(prefix.length);
+  const slug = rest.split("/")[0];
+  if (!slug) return null;
+  const target = PROJECT_LEGACY_REDIRECTS[slug];
+  if (!target || target === slug) return null;
+  const suffix = rest.slice(slug.length);
+  return `${prefix}${target}${suffix}`;
+}
+
+export function projectTabForSlug(slug: string): ProjectTab | undefined {
+  return PROJECT_WORKSPACE_TABS.find((tab) => tab.sections.some((section) => section.slug === slug));
 }
