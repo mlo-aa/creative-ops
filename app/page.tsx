@@ -3,7 +3,7 @@
 import { useStudio } from "@/core/store";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { btnGhost, btnPrimary, SectionHeader, StatusPill } from "@/core/ui/OpsField";
+import { btnPrimary, SectionHeader, StatusPill } from "@/core/ui/OpsField";
 
 export default function DashboardPage() {
   const { ready, projects, ops, allPosts } = useStudio();
@@ -154,24 +154,6 @@ export default function DashboardPage() {
                 <li className="text-sm opacity-40">Nothing due soon.</li>
               ) : null}
             </ul>
-          </div>
-
-          <div>
-            <h2 className="mb-3 text-xs tracking-[0.16em] uppercase opacity-45">Quick actions</h2>
-            <div className="flex flex-col gap-2">
-              <Link href="/projects/new" className={btnGhost}>
-                New project
-              </Link>
-              <Link href="/agenda" className={btnGhost}>
-                Open agenda
-              </Link>
-              <Link href="/posts" className={btnGhost}>
-                All designs
-              </Link>
-              <Link href="/inspiration" className={btnGhost}>
-                Add inspiration
-              </Link>
-            </div>
           </div>
         </aside>
       </div>

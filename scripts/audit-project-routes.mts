@@ -39,9 +39,24 @@ for (const slug of PROJECT_STUDIO_SLUGS) {
   });
 }
 
-test("every workspace slug maps to a project tab", () => {
-  for (const slug of PROJECT_WORKSPACE_SLUGS) {
+test("primary project nav is reduced to Overview + Brand (Posts is appended separately)", () => {
+  assert.deepEqual(PROJECT_WORKSPACE_TABS.map((t) => t.href), ["overview", "branding"]);
+});
+
+test("overview and branding slugs map to a project tab", () => {
+  for (const slug of ["overview", "branding", "brand"]) {
     assert.ok(projectTabForSlug(slug), `no tab for slug ${slug}`);
+  }
+});
+
+test("legacy workspace slugs still have live routes even though they lost a top-level tab", () => {
+  const legacySlugs = PROJECT_WORKSPACE_SLUGS.filter(
+    (slug) => !["overview", "branding", "brand"].includes(slug),
+  );
+  for (const slug of legacySlugs) {
+    assert.equal(projectTabForSlug(slug), undefined, `${slug} should no longer have a top-level tab`);
+    const file = path.join(process.cwd(), "app/projects/[projectId]", slug, "page.tsx");
+    assert.ok(fs.existsSync(file), `legacy route file missing for /projects/:id/${slug}`);
   }
 });
 

@@ -2,32 +2,19 @@ export type NavItem = { href: string; label: string };
 
 export type NavGroup = { id: string; label?: string; items: NavItem[] };
 
-/** Global app navigation — grouped for visual hierarchy, flat URLs unchanged. */
+/**
+ * Primary global navigation — kept intentionally short. Posts lives inside
+ * each project now, and Clients/Proposals are hidden (not removed) for now.
+ */
 export const GLOBAL_NAV_GROUPS: NavGroup[] = [
   {
-    id: "work",
-    label: "Work",
+    id: "main",
     items: [
       { href: "/", label: "Home" },
       { href: "/projects", label: "Projects" },
-      { href: "/posts", label: "Posts" },
-    ],
-  },
-  {
-    id: "planning",
-    label: "Planning",
-    items: [
       { href: "/agenda", label: "Agenda" },
       { href: "/ideas", label: "Idea Map" },
       { href: "/inspiration", label: "Inspiration" },
-    ],
-  },
-  {
-    id: "business",
-    label: "Business",
-    items: [
-      { href: "/clients", label: "Clients" },
-      { href: "/proposals", label: "Proposals" },
     ],
   },
 ];
@@ -47,20 +34,18 @@ export type ProjectTab = {
   sections: ProjectSection[];
 };
 
-/** Consolidated project workspace tabs (~6 primary areas). */
+/**
+ * Top-level project navigation — reduced to Overview | Brand (Posts is
+ * appended separately by the project layout). Strategy, Knowledge, Content
+ * and Deliverables are no longer separate destinations: their content now
+ * lives inside Overview via progressive disclosure. The routes themselves
+ * still exist and still work — nothing here deletes data.
+ */
 export const PROJECT_WORKSPACE_TABS: ProjectTab[] = [
   {
     href: "overview",
     label: "Overview",
     sections: [{ slug: "overview", label: "Overview" }],
-  },
-  {
-    href: "strategy",
-    label: "Strategy",
-    sections: [
-      { slug: "strategy", label: "Strategy" },
-      { slug: "phases", label: "Phases" },
-    ],
   },
   {
     href: "branding",
@@ -69,28 +54,6 @@ export const PROJECT_WORKSPACE_TABS: ProjectTab[] = [
       { slug: "branding", label: "Brand setup" },
       { slug: "brand", label: "Brand setup", redirectTo: "branding", hideFromSubNav: true },
     ],
-  },
-  {
-    href: "sources",
-    label: "Knowledge",
-    sections: [
-      { slug: "sources", label: "Sources" },
-      { slug: "links", label: "Links" },
-      { slug: "references", label: "References" },
-    ],
-  },
-  {
-    href: "content",
-    label: "Content",
-    sections: [
-      { slug: "content", label: "Content plan" },
-      { slug: "ideas", label: "Ideas" },
-    ],
-  },
-  {
-    href: "deliverables",
-    label: "Deliverables",
-    sections: [{ slug: "deliverables", label: "Deliverables" }],
   },
 ];
 

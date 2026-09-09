@@ -202,15 +202,3 @@ export function MigrationModal({
     </div>
   );
 }
-
-export function OfflineBanner() {
-  const { syncStatus } = useStudio();
-  if (syncStatus !== "offline" && syncStatus !== "unsynced") return null;
-  return (
-    <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-xs tracking-wide text-amber-200/90">
-      {syncStatus === "offline"
-        ? "Cloud unavailable — recent edits saved locally and will sync when connection returns."
-        : "Some changes are not yet synced to cloud — check diagnostics or retry."}
-    </div>
-  );
-}

@@ -61,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           key={item.href}
                           href={item.href}
                           aria-current={active ? "page" : undefined}
-                          className="rounded px-2.5 py-1.5 text-[11px] tracking-[0.12em] uppercase transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+                          className="rounded px-3 py-2.5 text-[11px] tracking-[0.12em] uppercase transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
                           style={{
                             opacity: active ? 1 : 0.45,
                             background: active ? "rgba(255,255,255,0.06)" : "transparent",
@@ -77,15 +77,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            {(saveStatus !== "idle" || syncStatus !== "idle") ? (
+            {syncStatus === "unsynced" ? (
+              <Link
+                href="/dev/migrate-local"
+                className="hidden items-center gap-1.5 border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[10px] tracking-[0.1em] uppercase text-amber-200/90 sm:inline-flex"
+                title="Some changes are not yet synced to cloud"
+              >
+                Sync issue
+              </Link>
+            ) : saveStatus !== "idle" || syncStatus !== "idle" ? (
               <span className="hidden text-[10px] tracking-[0.14em] uppercase opacity-40 sm:inline">
                 {syncStatus === "offline"
                   ? "Offline"
-                  : syncStatus === "unsynced"
-                    ? "Unsynced"
-                    : saveStatus === "saving" || syncStatus === "saving"
-                      ? "Saving…"
-                      : "Saved"}
+                  : saveStatus === "saving" || syncStatus === "saving"
+                    ? "Saving…"
+                    : "Saved"}
                 {cloudEnabled ? "" : " (local)"}
               </span>
             ) : null}
@@ -93,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => setPaletteOpen(true)}
               aria-label="Open command palette"
-              className="hidden border border-white/15 px-2.5 py-1 text-[10px] tracking-[0.1em] uppercase opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88] sm:block"
+              className="hidden border border-white/15 px-3 py-2 text-[10px] tracking-[0.1em] uppercase opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88] sm:block"
             >
               Search ⌘K
             </button>

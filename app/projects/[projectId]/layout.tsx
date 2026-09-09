@@ -2,7 +2,6 @@
 
 import { ProjectScope } from "@/core/project/context";
 import { useStudio } from "@/core/store";
-import { contextLevelLabel, computeContextLevel } from "@/core/ops/completeness";
 import {
   activeProjectTab,
   isProjectStudioPath,
@@ -18,7 +17,7 @@ import type { ReactNode } from "react";
 export default function ProjectLayout({ children }: { children: ReactNode }) {
   const params = useParams<{ projectId: string }>();
   const pathname = usePathname();
-  const { ready, getProject, getOpsProject, ops } = useStudio();
+  const { ready, getProject, getOpsProject } = useStudio();
   const project = getProject(params.projectId);
   const opsProject = getOpsProject(params.projectId);
   const inStudio = isProjectStudioPath(pathname, params.projectId);
@@ -36,8 +35,6 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
       </main>
     );
   }
-
-  const contextLevel = computeContextLevel(ops, params.projectId, project);
 
   return (
     <ProjectScope project={project}>
@@ -68,9 +65,6 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
                       {(opsProject.types ?? [opsProject.type]).join(", ")}
                     </span>
                     <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">{opsProject.status}</span>
-                    <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">
-                      {contextLevelLabel(contextLevel)}
-                    </span>
                   </>
                 ) : null}
               </div>
@@ -92,7 +86,7 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
                   key={item.href}
                   href={href}
                   aria-current={sectionActive && !inStudio ? "page" : undefined}
-                  className="px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+                  className="px-3.5 py-2.5 text-[10px] tracking-[0.14em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
                   style={{
                     opacity: sectionActive && !inStudio ? 1 : 0.4,
                     background: sectionActive && !inStudio ? "rgba(255,255,255,0.06)" : "transparent",
@@ -109,7 +103,7 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
             <Link
               href={`/projects/${project.id}/feed`}
               aria-current={inStudio ? "page" : undefined}
-              className="px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+              className="px-3.5 py-2.5 text-[10px] tracking-[0.14em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
               style={{
                 opacity: inStudio ? 1 : 0.4,
                 background: inStudio ? "rgba(255,255,255,0.06)" : "transparent",
