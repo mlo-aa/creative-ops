@@ -3,6 +3,7 @@
 import type { BrandColor, BrandLogo, LogoRole } from "@/core/types";
 import { useProject } from "@/core/project/context";
 import { useStudio } from "@/core/store";
+import { ColorSwatchGrid, PRESET_BRAND_SWATCHES } from "@/core/ui/ColorSwatches";
 
 const ROLES: LogoRole[] = [
   "primary",
@@ -70,26 +71,30 @@ export function BrandSetupPanel() {
       </section>
 
       <h3 className="mt-12 text-xs tracking-[0.16em] uppercase opacity-50">Colors</h3>
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 space-y-4">
         {brand.colors.map((color, index) => (
-          <div key={color.id} className="flex gap-3">
-            <input
-              type="color"
-              value={color.hex}
-              onChange={(e) => {
-                const colors = brand.colors.map((item, i) => (i === index ? { ...item, hex: e.target.value } : item));
+          <div key={color.id} className="space-y-2">
+            <div className="flex gap-3">
+              <input
+                className={input}
+                value={color.name}
+                onChange={(e) => {
+                  const colors = brand.colors.map((item, i) => (i === index ? { ...item, name: e.target.value } : item));
+                  setBrand({ ...brand, colors });
+                }}
+              />
+              <input className={input} value={color.hex} readOnly />
+            </div>
+            <ColorSwatchGrid
+              items={PRESET_BRAND_SWATCHES}
+              selectedId={
+                PRESET_BRAND_SWATCHES.find((preset) => preset.hex.toLowerCase() === color.hex.toLowerCase())?.id
+              }
+              onSelect={(item) => {
+                const colors = brand.colors.map((c, i) => (i === index ? { ...c, hex: item.hex } : c));
                 setBrand({ ...brand, colors });
               }}
             />
-            <input
-              className={input}
-              value={color.name}
-              onChange={(e) => {
-                const colors = brand.colors.map((item, i) => (i === index ? { ...item, name: e.target.value } : item));
-                setBrand({ ...brand, colors });
-              }}
-            />
-            <input className={input} value={color.hex} readOnly />
           </div>
         ))}
         <button

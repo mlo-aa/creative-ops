@@ -3,6 +3,7 @@
 import { contrastOk, hexOf } from "@/core/color";
 import { templateControls } from "@/core/templates/registry";
 import type { BrandProfile, DesignState } from "@/core/types";
+import { ColorSwatchGrid } from "@/core/ui/ColorSwatches";
 import type { ChangeEvent } from "react";
 
 export function DesignEditor({
@@ -241,28 +242,14 @@ function Swatches({
   contrastAgainst?: string;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {brand.colors.map((color) => {
-        const disabled = contrastAgainst
-          ? !contrastOk(hexOf(brand, contrastAgainst), color.hex)
-          : false;
-        return (
-          <button
-            key={color.id}
-            type="button"
-            title={color.name}
-            disabled={disabled}
-            onClick={() => onSelect(color.id)}
-            className="h-[22px] w-[22px] rounded-full"
-            style={{
-              background: color.hex,
-              border: value === color.id ? "2px solid #f2f1ed" : "1px solid #ffffff33",
-              opacity: disabled ? 0.25 : 1,
-            }}
-          />
-        );
-      })}
-    </div>
+    <ColorSwatchGrid
+      items={brand.colors}
+      selectedId={value}
+      onSelect={(item) => onSelect(item.id)}
+      isDisabled={
+        contrastAgainst ? (item) => !contrastOk(hexOf(brand, contrastAgainst), item.hex) : undefined
+      }
+    />
   );
 }
 
