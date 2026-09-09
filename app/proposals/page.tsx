@@ -63,7 +63,7 @@ export default function ProposalsPage() {
                     <p className="text-xs opacity-45">{p.clientName}</p>
                     <p className="mt-1 text-xs">{p.currency} {p.value}</p>
                     <select
-                      className="mt-2 w-full border border-white/10 bg-[#141414] text-[10px] uppercase"
+                      className="mt-2 w-full border border-white/10 bg-[#15171a] text-[10px] uppercase"
                       value={p.status}
                       onChange={(e) => updateProposal(p.id, { status: e.target.value as ProposalStatus })}
                     >

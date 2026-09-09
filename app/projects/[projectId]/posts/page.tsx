@@ -33,8 +33,8 @@ export default function PostsPage() {
     <main className="px-6 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl tracking-[-0.03em]">Designs</h1>
-          <p className="mt-2 max-w-xl text-sm opacity-55">
+          <h1 className="text-2xl font-semibold tracking-[-0.01em]">Designs</h1>
+          <p className="mt-2 max-w-xl text-sm text-white/55">
             Static designs, carousels, and reels for {project.name}.
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function PostsPage() {
           <DropdownMenu
             label="Create options"
             trigger={
-              <span className="inline-flex h-9 items-center border border-white/15 px-3 text-[11px] uppercase tracking-[0.1em] opacity-60">
+              <span className="inline-flex h-10 items-center rounded-xl border border-white/15 px-3 text-[13px] opacity-60">
                 ···
               </span>
             }
@@ -68,7 +68,7 @@ export default function PostsPage() {
             role="tab"
             aria-selected={kindFilter === f}
             onClick={() => setKindFilter(f)}
-            className="border border-white/10 px-3 py-1.5 text-[10px] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+            className="rounded-lg border border-white/10 px-3.5 py-2 text-[13px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--project-accent,#e4e0d4)]"
             style={{ opacity: kindFilter === f ? 1 : 0.45 }}
           >
             {f}
@@ -78,7 +78,7 @@ export default function PostsPage() {
 
       <div className="mt-6 grid gap-3">
         {rows.length === 0 ? (
-          <p className="text-sm opacity-40">
+          <p className="text-sm text-white/40">
             {kindFilter === "reels" ? "No reels yet — create one to get started." : "No posts match this filter."}
           </p>
         ) : null}
@@ -88,20 +88,20 @@ export default function PostsPage() {
             <Link
               key={post.id}
               href={`/projects/${project.id}/posts/${post.id}`}
-              className="flex items-center justify-between border border-white/10 px-4 py-3 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+              className="flex items-center justify-between rounded-2xl border border-white/10 px-4 py-3.5 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--project-accent,#e4e0d4)]"
             >
               <span>
                 {post.number} — {post.title}
                 {reel ? (
-                  <span className="ml-3 text-[10px] uppercase tracking-[0.1em] opacity-45">
+                  <span className="ml-3 text-[12px] text-white/45">
                     {reelDurationLabel(post)}
                   </span>
                 ) : null}
               </span>
               <span className="flex gap-2">
                 <StatusPill>{post.status}</StatusPill>
-                {reel ? <StatusPill>REEL</StatusPill> : null}
-                {post.video?.voiceover?.assetUrl ? <StatusPill>VO</StatusPill> : null}
+                {reel ? <StatusPill>Reel</StatusPill> : null}
+                {post.video?.voiceover?.assetUrl ? <StatusPill>Voiceover</StatusPill> : null}
                 {!reel && post.exportKind === "gif" ? <StatusPill>GIF</StatusPill> : null}
                 {!reel && post.kind === "carousel" ? <StatusPill>Carousel</StatusPill> : null}
               </span>

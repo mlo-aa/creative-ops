@@ -58,7 +58,7 @@ export function NewDesignModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-auto border border-white/15 bg-[#171717] p-6"
+        className="max-h-[90vh] w-full max-w-2xl overflow-auto border border-white/15 bg-[#1b1c1f] p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {mode === "contentType" ? (

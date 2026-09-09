@@ -53,7 +53,7 @@ export default function ClientsPage() {
               {projects.length ? (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {projects.map((p) => (
-                    <Link key={p.id} href={`/projects/${p.id}/ideas`} className="text-[10px] uppercase tracking-[0.12em] text-[#7ecba8]">
+                    <Link key={p.id} href={`/projects/${p.id}/ideas`} className="text-[10px] uppercase tracking-[0.12em] text-[var(--project-accent,#e4e0d4)]">
                       {p.name}
                     </Link>
                   ))}

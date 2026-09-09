@@ -30,7 +30,7 @@ export default function SourceDetailPage() {
         <StatusPill>{source.sourceType.replace("_", " ")}</StatusPill>
         <StatusPill>{source.priority}</StatusPill>
         <StatusPill>{source.status}</StatusPill>
-        {source.isSourceOfTruth ? <StatusPill color="#7ecba8">Source of truth</StatusPill> : null}
+        {source.isSourceOfTruth ? <StatusPill color="var(--project-accent,#e4e0d4)">Source of truth</StatusPill> : null}
       </div>
 
       {source.description ? (
@@ -41,7 +41,7 @@ export default function SourceDetailPage() {
       ) : null}
 
       {source.url ? (
-        <a href={source.url} target="_blank" rel="noreferrer" className="text-sm text-[#7ecba8]">{source.url}</a>
+        <a href={source.url} target="_blank" rel="noreferrer" className="text-sm text-[var(--project-accent,#e4e0d4)]">{source.url}</a>
       ) : null}
 
       {source.fileName ? (

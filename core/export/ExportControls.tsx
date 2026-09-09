@@ -151,7 +151,7 @@ export function ExportControls({
         </button>
       ) : null}
       {cloudEnabled ? (
-        <label className="flex items-center gap-2 text-[10px] uppercase opacity-50">
+        <label className="flex items-center gap-2 text-[12px] text-white/50">
           <input type="checkbox" checked={saveToProject} onChange={(e) => setSaveToProject(e.target.checked)} />
           Save export to project
         </label>
@@ -161,5 +161,4 @@ export function ExportControls({
   );
 }
 
-const btn =
-  "h-10 border border-white/20 px-4 text-[12px] tracking-[0.08em] uppercase disabled:opacity-40";
+const btn = "h-10 rounded-xl border border-white/20 px-4 text-[13px] disabled:opacity-40";

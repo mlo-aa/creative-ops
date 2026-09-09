@@ -142,9 +142,9 @@ function Section({
 
   return (
     <section className="mb-12">
-      <p className="mb-4 text-xs tracking-[0.16em] uppercase opacity-50">{title}</p>
+      <p className="mb-4 text-[15px] font-medium text-white/60">{title}</p>
       {posts.length === 0 ? (
-        <p className="text-sm opacity-45">{empty}</p>
+        <p className="text-sm text-white/45">{empty}</p>
       ) : (
         <div
           className="grid grid-cols-3"
@@ -173,7 +173,7 @@ function Section({
                 }}
                 className="block text-inherit no-underline"
               >
-                <div className="relative">
+                <div className="relative overflow-hidden rounded-2xl">
                   <FluidStage width={format.width} height={format.height}>
                     <StudioCanvas
                       background={canvasBackground(post, (id) => hexOf(project.brand, id))}
@@ -184,25 +184,25 @@ function Section({
                       <PostArt post={post} projectId={projectId} />
                     </StudioCanvas>
                   </FluidStage>
-                  <span className="absolute top-2 left-2 bg-black/80 px-1.5 text-[11px]">{index + 1}</span>
-                  <div className="absolute right-2 bottom-2 flex gap-1 text-[10px] tracking-[0.1em] uppercase">
+                  <span className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[12px]">{index + 1}</span>
+                  <div className="absolute right-2 bottom-2 flex gap-1 text-[12px]">
                     {post.kind === "carousel" ? (
-                      <span className="bg-black/80 px-2 py-1">{post.slides?.length ?? 0} slides</span>
+                      <span className="rounded-full bg-black/70 px-2 py-1">{post.slides?.length ?? 0} slides</span>
                     ) : null}
                     {post.exportKind === "gif" ? (
-                      <span className="bg-black/80 px-2 py-1">GIF</span>
+                      <span className="rounded-full bg-black/70 px-2 py-1">GIF</span>
                     ) : null}
                     {post.variantLabel ? (
-                      <span className="bg-black/80 px-2 py-1">{post.variantLabel}</span>
+                      <span className="rounded-full bg-black/70 px-2 py-1">{post.variantLabel}</span>
                     ) : null}
                   </div>
                 </div>
-                <p className="mt-2 text-[11px] tracking-[0.12em] uppercase opacity-50">
+                <p className="mt-2 text-[13px] text-white/55">
                   {post.number} — {post.title}
                 </p>
               </Link>
               <div
-                className="mt-2 mb-4 flex flex-wrap gap-3 text-[11px] tracking-[0.08em] uppercase opacity-50"
+                className="mt-2 mb-4 flex flex-wrap gap-3 text-[12px] text-white/50"
                 onPointerDown={(event) => event.stopPropagation()}
               >
                 <button type="button" onClick={() => onToggle(post.id)}>
@@ -237,8 +237,8 @@ function ModeChip({
     <button
       type="button"
       onClick={onClick}
-      className="px-3 py-2 text-[11px] tracking-[0.12em] uppercase"
-      style={{ border: `1px solid ${active ? "#f4f1ea" : "#ffffff28"}` }}
+      className="rounded-lg px-3.5 py-2 text-[13px]"
+      style={{ border: `1px solid ${active ? "#f2f1ed" : "#ffffff28"}` }}
     >
       {children}
     </button>

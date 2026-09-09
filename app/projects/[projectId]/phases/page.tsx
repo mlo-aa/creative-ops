@@ -67,7 +67,7 @@ export default function ProjectPhasesPage() {
                 <select
                   value={phase.status}
                   onChange={(e) => updatePhase(phase.id, { status: e.target.value as typeof phase.status })}
-                  className="border border-white/10 bg-[#141414] text-[10px] uppercase"
+                  className="border border-white/10 bg-[#15171a] text-[10px] uppercase"
                 >
                   {(["pending", "active", "review", "completed", "blocked"] as const).map((s) => (
                     <option key={s} value={s}>{s}</option>

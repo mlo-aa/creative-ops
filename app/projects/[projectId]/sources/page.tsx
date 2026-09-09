@@ -139,13 +139,13 @@ export default function ProjectSourcesPage() {
           <li key={s.id} className="border border-white/10 p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <Link href={`/projects/${params.projectId}/sources/${s.id}`} className="font-medium text-[#7ecba8]">
+                <Link href={`/projects/${params.projectId}/sources/${s.id}`} className="font-medium text-[var(--project-accent,#e4e0d4)]">
                   {s.title}
                 </Link>
                 <div className="mt-1 flex flex-wrap gap-2">
                   <StatusPill>{s.category.replace("_", " ")}</StatusPill>
                   <StatusPill>{s.priority}</StatusPill>
-                  {s.isSourceOfTruth ? <StatusPill color="#7ecba8">Source of truth</StatusPill> : null}
+                  {s.isSourceOfTruth ? <StatusPill color="var(--project-accent,#e4e0d4)">Source of truth</StatusPill> : null}
                   {s.status === "superseded" ? <StatusPill>Superseded</StatusPill> : null}
                 </div>
                 {s.description ? <p className="mt-2 text-sm opacity-50">{s.description}</p> : null}

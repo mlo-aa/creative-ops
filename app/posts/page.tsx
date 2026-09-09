@@ -103,7 +103,7 @@ export default function GlobalPostsPage() {
         <select
           value={projectFilter}
           onChange={(e) => setProjectFilter(e.target.value)}
-          className="border border-white/10 bg-[#141414] px-3 py-1.5 text-[11px] uppercase"
+          className="border border-white/10 bg-[#15171a] px-3 py-1.5 text-[11px] uppercase"
         >
           <option value="all">All projects</option>
           {ops.projects.map((p) => (
@@ -167,7 +167,7 @@ export default function GlobalPostsPage() {
           onClick={() => setProjectPickerOpen(false)}
         >
           <div
-            className="w-full max-w-md border border-white/15 bg-[#171717] p-6"
+            className="w-full max-w-md border border-white/15 bg-[#1b1c1f] p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl tracking-[-0.03em]">Choose project</h2>

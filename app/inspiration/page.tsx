@@ -72,7 +72,7 @@ export default function InspirationPage() {
               <p className="font-medium">{item.title}</p>
               <StatusPill>{item.category}</StatusPill>
               {item.url ? (
-                <a href={item.url} target="_blank" rel="noreferrer" className="mt-2 block truncate text-xs text-[#7ecba8]">{item.url}</a>
+                <a href={item.url} target="_blank" rel="noreferrer" className="mt-2 block truncate text-xs text-[var(--project-accent,#e4e0d4)]">{item.url}</a>
               ) : null}
               <button type="button" onClick={() => deleteInspiration(item.id)} className="mt-3 text-[10px] uppercase opacity-35">Delete</button>
             </div>

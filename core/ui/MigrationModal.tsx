@@ -90,7 +90,7 @@ export function MigrationModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-auto border border-white/15 bg-[#171717] p-6">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-auto border border-white/15 bg-[#1b1c1f] p-6">
         <h2 className="text-xl tracking-[-0.03em]">
           {recovery ? "Cloud import recovery" : "Existing local Creative Ops data found"}
         </h2>

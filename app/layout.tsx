@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${sora.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#111] text-[#f4f1ea]">
+      <body className="min-h-full bg-[#0c0d0f] text-[#f2f1ed]">
         <Providers>{children}</Providers>
       </body>
     </html>

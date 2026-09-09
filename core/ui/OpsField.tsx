@@ -30,13 +30,13 @@ export function AutosaveField({
 
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] tracking-[0.14em] uppercase opacity-45">{label}</span>
+      <span className="mb-2 block text-[13px] text-white/45">{label}</span>
       <textarea
         value={local}
         onChange={(e) => setLocal(e.target.value)}
         rows={rows}
         placeholder={placeholder}
-        className="w-full resize-y border border-white/10 bg-[#141414] px-3 py-2.5 text-sm leading-relaxed outline-none focus:border-white/25"
+        className={inputClass}
       />
     </label>
   );
@@ -64,12 +64,12 @@ export function AutosaveInput({
 
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] tracking-[0.14em] uppercase opacity-45">{label}</span>
+      <span className="mb-2 block text-[13px] text-white/45">{label}</span>
       <input
         value={local}
         onChange={(e) => setLocal(e.target.value)}
         placeholder={placeholder}
-        className="w-full border border-white/10 bg-[#141414] px-3 py-2 text-sm outline-none focus:border-white/25"
+        className={inputClass}
       />
     </label>
   );
@@ -78,11 +78,10 @@ export function AutosaveInput({
 export function StatusPill({ children, color }: { children: React.ReactNode; color?: string }) {
   return (
     <span
-      className="inline-block px-2 py-0.5 text-[10px] tracking-[0.14em] uppercase"
+      className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium"
       style={{
-        border: `1px solid ${color ?? "rgba(255,255,255,0.2)"}`,
-        color: color ?? "inherit",
-        opacity: 0.85,
+        background: color ? `${color}1f` : "rgba(242,241,237,0.08)",
+        color: color ?? "rgba(242,241,237,0.7)",
       }}
     >
       {children}
@@ -93,19 +92,17 @@ export function StatusPill({ children, color }: { children: React.ReactNode; col
 export function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
-      <h1 className="text-2xl tracking-[-0.03em]" style={{ fontWeight: 500 }}>
-        {title}
-      </h1>
+      <h1 className="text-2xl tracking-[-0.02em] font-semibold text-[#f2f1ed]">{title}</h1>
       {action}
     </div>
   );
 }
 
 export const btnPrimary =
-  "inline-flex h-9 items-center border border-[#3d8f6a] bg-[#2a6b4f]/30 px-4 text-[11px] tracking-[0.12em] uppercase text-[#b8e6cc] hover:bg-[#2a6b4f]/50";
+  "inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#f2f1ed] px-4 text-[13px] font-medium text-[#0c0d0f] transition hover:opacity-90";
 
 export const btnGhost =
-  "inline-flex h-9 items-center border border-white/15 px-4 text-[11px] tracking-[0.12em] uppercase opacity-70 hover:opacity-100";
+  "inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/15 px-4 text-[13px] text-white/75 transition hover:border-white/30 hover:text-white";
 
 export const inputClass =
-  "w-full border border-white/10 bg-[#141414] px-3 py-2 text-sm outline-none focus:border-white/25";
+  "w-full rounded-xl border border-white/10 bg-[#15171a] px-3.5 py-2.5 text-sm text-[#f2f1ed] outline-none transition focus:border-white/25";

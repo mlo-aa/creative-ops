@@ -8,6 +8,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
+const ACCENT = "var(--project-accent,#e4e0d4)";
+const FOCUS_RING = `focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[${ACCENT}]`;
+
 function isNavActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -38,14 +41,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       pathname.includes("/settings"));
 
   return (
-    <div className="min-h-screen bg-[#111] text-[#f1f3f7]">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#111]/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-5 py-3">
-          <div className="flex min-w-0 items-center gap-4 md:gap-5">
+    <div className="min-h-screen bg-[#0c0d0f] text-[#f2f1ed]">
+      <header className="sticky top-0 z-40 border-b border-white/8 bg-[#0c0d0f]/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-5 py-3.5">
+          <div className="flex min-w-0 items-center gap-5 md:gap-6">
             <Link
               href="/"
-              className="shrink-0 text-sm tracking-[-0.03em] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
-              style={{ fontWeight: 500 }}
+              className={`shrink-0 rounded-md text-[15px] font-medium tracking-[-0.01em] ${FOCUS_RING}`}
             >
               Creative Ops
             </Link>
@@ -53,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {GLOBAL_NAV_GROUPS.map((group, gi) => (
                 <div key={group.id} className="flex items-center">
                   {gi > 0 ? <NavGroupSeparator /> : null}
-                  <div className="flex items-center gap-0.5" role="group" aria-label={group.label}>
+                  <div className="flex items-center gap-1" role="group" aria-label={group.label}>
                     {group.items.map((item) => {
                       const active = isNavActive(pathname, item.href);
                       return (
@@ -61,10 +63,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                           key={item.href}
                           href={item.href}
                           aria-current={active ? "page" : undefined}
-                          className="rounded px-3 py-2.5 text-[11px] tracking-[0.12em] uppercase transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+                          className={`rounded-lg px-3.5 py-2.5 text-[13px] transition ${FOCUS_RING}`}
                           style={{
-                            opacity: active ? 1 : 0.45,
-                            background: active ? "rgba(255,255,255,0.06)" : "transparent",
+                            opacity: active ? 1 : 0.5,
+                            background: active ? "rgba(255,255,255,0.07)" : "transparent",
                           }}
                         >
                           {item.label}
@@ -80,13 +82,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             {syncStatus === "unsynced" ? (
               <Link
                 href="/dev/migrate-local"
-                className="hidden items-center gap-1.5 border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[10px] tracking-[0.1em] uppercase text-amber-200/90 sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-[12px] text-amber-200/90 sm:inline-flex"
                 title="Some changes are not yet synced to cloud"
               >
                 Sync issue
               </Link>
             ) : saveStatus !== "idle" || syncStatus !== "idle" ? (
-              <span className="hidden text-[10px] tracking-[0.14em] uppercase opacity-40 sm:inline">
+              <span className="hidden text-[12px] text-white/40 sm:inline">
                 {syncStatus === "offline"
                   ? "Offline"
                   : saveStatus === "saving" || syncStatus === "saving"
@@ -99,7 +101,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => setPaletteOpen(true)}
               aria-label="Open command palette"
-              className="hidden border border-white/15 px-3 py-2 text-[10px] tracking-[0.1em] uppercase opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88] sm:block"
+              className={`hidden rounded-lg border border-white/12 px-3.5 py-2 text-[12px] text-white/55 sm:block ${FOCUS_RING}`}
             >
               Search ⌘K
             </button>

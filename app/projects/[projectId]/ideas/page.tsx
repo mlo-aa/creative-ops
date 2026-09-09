@@ -54,7 +54,7 @@ export default function ProjectIdeasPage() {
               <select
                 value={idea.status}
                 onChange={(e) => updateIdea(idea.id, { status: e.target.value as typeof idea.status })}
-                className="border border-white/10 bg-[#141414] px-2 py-1 text-[10px] uppercase"
+                className="border border-white/10 bg-[#15171a] px-2 py-1 text-[10px] uppercase"
               >
                 {(["idea", "exploring", "approved", "discarded"] as const).map((s) => (
                   <option key={s} value={s}>

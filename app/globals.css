@@ -1,12 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --studio-bg: #111111;
-  --studio-panel: #171717;
-  --studio-text: #f4f1ea;
+  /* Warm near-black base — never pure #000 */
+  --studio-bg: #0c0d0f;
+  --studio-panel: #15171a;
+  --studio-elevated: #1b1c1f;
+  --studio-text: #f2f1ed;
   --studio-muted: #9a968c;
-  --studio-line: #2c2c2c;
-  --studio-accent: #e8e4d8;
+  --studio-line: rgba(242, 241, 237, 0.08);
+  /* Neutral chrome accent — actual project screens override this with
+     --project-accent (the project's own brand color) set by the project
+     layout; this is only the fallback for global, non-project chrome. */
+  --studio-accent: #e4e0d4;
+  --project-accent: var(--studio-accent);
+  --radius-card: 18px;
   --background: var(--studio-bg);
   --foreground: var(--studio-text);
 }
@@ -28,11 +35,11 @@ body {
 
 ::selection {
   background: var(--studio-accent);
-  color: #111;
+  color: #0c0d0f;
 }
 
 :focus-visible {
-  outline: 2px solid var(--studio-accent);
+  outline: 2px solid var(--project-accent);
   outline-offset: 3px;
 }
 

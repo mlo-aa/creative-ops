@@ -524,7 +524,7 @@ function SourcesStep({
           <li key={s.id} className="border border-white/10 px-4 py-3 text-sm">
             <span className="font-medium">{s.title}</span>
             <span className="ml-2 text-[10px] uppercase opacity-40">{s.category}</span>
-            {s.isSourceOfTruth ? <span className="ml-2 text-[10px] text-[#7ecba8]">SOT</span> : null}
+            {s.isSourceOfTruth ? <span className="ml-2 text-[10px] text-[var(--project-accent,#e4e0d4)]">SOT</span> : null}
           </li>
         ))}
       </ul>
@@ -816,7 +816,7 @@ function ReviewStep({
         </div>
       ) : null}
       <p className="opacity-40">{sources.length} sources · {references.length} references · {intake?.expectedDeliverables.length ?? 0} deliverables planned</p>
-      <Link href={`/projects/${projectId}/overview`} className="text-[#7ecba8] text-xs uppercase">Preview workspace →</Link>
+      <Link href={`/projects/${projectId}/overview`} className="text-[var(--project-accent,#e4e0d4)] text-xs uppercase">Preview workspace →</Link>
     </div>
   );
 }

@@ -108,7 +108,7 @@ export function NewReelModal({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
         <div
-          className="w-full max-w-md border border-white/15 bg-[#171717] p-6"
+          className="w-full max-w-md border border-white/15 bg-[#1b1c1f] p-6"
           onClick={(e) => e.stopPropagation()}
         >
           <h2 className="text-lg tracking-[-0.03em]">Project required</h2>
@@ -132,14 +132,14 @@ export function NewReelModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-auto border border-white/15 bg-[#171717] p-6"
+        className="max-h-[90vh] w-full max-w-2xl overflow-auto border border-white/15 bg-[#1b1c1f] p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl tracking-[-0.03em]">New reel / video</h2>
         <p className="mt-2 text-sm opacity-50">1080×1920 · 9:16 · editable storyboard</p>
         <p className="mt-1 text-[11px] opacity-40">Storyboard provider: {providerLabel}</p>
         {genNotice ? (
-          <p className="mt-2 text-sm text-[#b8e6cc]">{genNotice}</p>
+          <p className="mt-2 text-sm text-[#f2f1ed]">{genNotice}</p>
         ) : null}
 
         <div className="mt-6 space-y-4">

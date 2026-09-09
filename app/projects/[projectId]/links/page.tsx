@@ -54,7 +54,7 @@ export default function ProjectLinksPage() {
           <li key={link.id} className="flex items-start justify-between gap-4 border border-white/10 p-4">
             <div>
               <p className="font-medium">{link.title}</p>
-              <a href={link.url} target="_blank" rel="noreferrer" className="mt-1 block text-sm text-[#7ecba8] opacity-80">
+              <a href={link.url} target="_blank" rel="noreferrer" className="mt-1 block text-sm text-[var(--project-accent,#e4e0d4)] opacity-80">
                 {link.url}
               </a>
               <p className="mt-2 text-xs opacity-45">{link.type} · {link.description}</p>

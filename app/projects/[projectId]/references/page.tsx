@@ -92,7 +92,7 @@ export default function ProjectReferencesPage() {
                 <div>
                   <p className="font-medium">{r.title}</p>
                   {board ? <StatusPill>{board.name}</StatusPill> : null}
-                  {r.url ? <a href={r.url} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-[#7ecba8]">{r.url}</a> : null}
+                  {r.url ? <a href={r.url} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-[var(--project-accent,#e4e0d4)]">{r.url}</a> : null}
                 </div>
                 <button type="button" onClick={() => deleteReference(r.id)} className="text-[10px] uppercase opacity-35">Delete</button>
               </div>

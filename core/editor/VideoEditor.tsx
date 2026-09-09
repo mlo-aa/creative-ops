@@ -206,11 +206,11 @@ export function VideoEditor({ post }: { post: StudioPost }) {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-56px)] flex-col bg-[#111] text-white">
-      <header className="flex flex-wrap items-center gap-3 border-b border-white/10 px-4 py-3">
+    <div className="flex min-h-[calc(100vh-56px)] flex-col bg-[#0c0d0f] text-[#f2f1ed]">
+      <header className="flex flex-wrap items-center gap-3 border-b border-white/8 px-4 py-3">
         <Link
           href={`/projects/${project.id}/posts`}
-          className="text-xs uppercase opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+          className="rounded-md text-[13px] opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--project-accent,#e4e0d4)]"
         >
           ← Designs
         </Link>
@@ -273,9 +273,9 @@ export function VideoEditor({ post }: { post: StudioPost }) {
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {leftOpen ? (
-          <aside className="w-full shrink-0 border-b border-white/10 p-3 lg:w-[200px] lg:border-b-0 lg:border-r xl:w-[220px]">
+          <aside className="w-full shrink-0 border-b border-white/8 p-3 lg:w-[200px] lg:border-b-0 lg:border-r xl:w-[220px]">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[10px] uppercase tracking-widest opacity-40">Scenes</p>
+              <p className="text-[13px] text-white/45">Scenes</p>
               <IconButton label="Hide scene list" onClick={() => setLeftOpen(false)}>
                 ‹
               </IconButton>
@@ -286,12 +286,14 @@ export function VideoEditor({ post }: { post: StudioPost }) {
                   key={scene.id}
                   type="button"
                   aria-current={selectedSceneId === scene.id ? "true" : undefined}
-                  className="w-full rounded border border-white/10 p-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
-                  style={{ borderColor: selectedSceneId === scene.id ? "rgba(126,203,168,0.5)" : undefined }}
+                  className="w-full rounded-xl border p-2.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--project-accent,#e4e0d4)]"
+                  style={{
+                    borderColor: selectedSceneId === scene.id ? "var(--project-accent,#e4e0d4)" : "rgba(255,255,255,0.1)",
+                  }}
                   onClick={() => selectScene(scene.id)}
                 >
-                  <p className="text-xs font-medium">Scene {i + 1}</p>
-                  <p className="text-[10px] opacity-40">{(scene.durationMs / 1000).toFixed(1)}s</p>
+                  <p className="text-[13px] font-medium">Scene {i + 1}</p>
+                  <p className="text-[12px] text-white/40">{(scene.durationMs / 1000).toFixed(1)}s</p>
                 </button>
               ))}
             </div>
@@ -321,7 +323,7 @@ export function VideoEditor({ post }: { post: StudioPost }) {
         )}
 
         <main id="reel-preview" className="flex min-w-0 flex-1 flex-col items-center p-4">
-          <div className="aspect-[9/16] w-full max-w-[340px] overflow-hidden border border-white/15 bg-black">
+          <div className="aspect-[9/16] w-full max-w-[340px] overflow-hidden rounded-2xl border border-white/15 bg-black">
             <VideoPreviewPlayer
               document={doc}
               playing={playing}
@@ -362,9 +364,9 @@ export function VideoEditor({ post }: { post: StudioPost }) {
         </main>
 
         {rightOpen ? (
-          <aside className="w-full shrink-0 border-t border-white/10 p-3 lg:w-[280px] lg:border-l lg:border-t-0 xl:w-[300px]">
+          <aside className="w-full shrink-0 border-t border-white/8 p-3 lg:w-[280px] lg:border-l lg:border-t-0 xl:w-[300px]">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[10px] uppercase tracking-widest opacity-40">Inspector</p>
+              <p className="text-[13px] text-white/45">Inspector</p>
               <IconButton label="Hide inspector" onClick={() => setRightOpen(false)}>
                 ›
               </IconButton>
@@ -471,9 +473,9 @@ export function VideoEditor({ post }: { post: StudioPost }) {
                       <button
                         key={el.id}
                         type="button"
-                        className="block w-full border border-white/10 px-2 py-1 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+                        className="block w-full rounded-lg border px-2.5 py-1.5 text-left text-[13px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--project-accent,#e4e0d4)]"
                         style={{
-                          borderColor: selectedElementId === el.id ? "rgba(126,203,168,0.5)" : undefined,
+                          borderColor: selectedElementId === el.id ? "var(--project-accent,#e4e0d4)" : "rgba(255,255,255,0.1)",
                         }}
                         onClick={() => {
                           setSelectedElementId(el.id);
@@ -486,7 +488,7 @@ export function VideoEditor({ post }: { post: StudioPost }) {
 
                     {selectedElement && selectedScene ? (
                       <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
-                        <p className="text-[10px] uppercase tracking-widest opacity-40">
+                        <p className="text-[13px] text-white/45">
                           {selectedElement.name}
                         </p>
                         {selectedElement.type === "text" && "content" in selectedElement.props ? (
@@ -619,13 +621,13 @@ export function VideoEditor({ post }: { post: StudioPost }) {
       {showAudioTimeline ? (
         <footer className="border-t border-white/10 p-4">
           <ReelAudioTimeline doc={doc} />
-          <div className="mt-2 flex h-10 overflow-hidden rounded border border-white/10">
+          <div className="mt-2 flex h-10 overflow-hidden rounded-xl border border-white/10">
             {doc.scenes.map((scene) => (
               <button
                 key={scene.id}
                 type="button"
                 aria-label={`Go to scene at ${(scene.durationMs / 1000).toFixed(1)} seconds`}
-                className="h-full border-r border-white/10 bg-white/5 text-[10px] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7ecb88]"
+                className="h-full border-r border-white/10 bg-white/5 text-[12px] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--project-accent,#e4e0d4)]"
                 style={{ flex: scene.durationMs }}
                 onClick={() => {
                   selectScene(scene.id);

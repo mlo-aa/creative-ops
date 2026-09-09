@@ -33,10 +33,10 @@ export function DesignEditor({
   }
 
   return (
-    <aside className="ig-export-ignore h-[calc(100vh-120px)] w-[300px] shrink-0 overflow-auto border border-white/10 bg-[#171717] p-4">
+    <aside className="ig-export-ignore h-[calc(100vh-120px)] w-[300px] shrink-0 overflow-auto rounded-2xl border border-white/10 bg-[#1b1c1f] p-4">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-[11px] tracking-[0.16em] uppercase opacity-50">Edit design</p>
-        <button type="button" onClick={onReset} className="text-[11px] tracking-[0.08em] uppercase opacity-60">
+        <p className="text-[13px] text-white/55">Edit design</p>
+        <button type="button" onClick={onReset} className="text-[12px] text-white/55 hover:text-white/85">
           Reset design
         </button>
       </div>
@@ -65,7 +65,7 @@ export function DesignEditor({
           <textarea value={design.labels.join("\n")} onChange={(e) => onChange({ labels: e.target.value.split("\n") })} rows={6} className={input} />
         </Field>
       ) : null}
-      <p className="mt-2 mb-3 text-[11px] tracking-[0.16em] uppercase opacity-50">Color</p>
+      <p className="mt-2 mb-3 text-[13px] text-white/55">Color</p>
       {controls.colors.map((field) => (
         <Field key={field} label={field}>
           <Swatches brand={brand} value={design[field]} onSelect={(id) => onChange({ [field]: id })} contrastAgainst={field === "text" ? design.background : undefined} />
@@ -103,8 +103,8 @@ export function DesignEditor({
       <Slider label="Headline Y" value={design.headlineY} min={-400} max={400} onChange={(headlineY) => onChange({ headlineY })} />
       {controls.image ? (
         <>
-          <p className="mt-2 mb-2 text-[11px] tracking-[0.16em] uppercase opacity-50">Image</p>
-          <label className="mb-3 block text-[11px] tracking-[0.08em] uppercase opacity-60">
+          <p className="mt-2 mb-2 text-[13px] text-white/55">Image</p>
+          <label className="mb-3 block text-[12px] text-white/55">
             Replace image
             <input type="file" accept="image/*" onChange={onImage} className="hidden" />
           </label>
@@ -120,7 +120,7 @@ export function DesignEditor({
       ) : null}
       {controls.path ? (
         <>
-          <p className="mt-2 mb-2 text-[11px] tracking-[0.16em] uppercase opacity-50">Graphic</p>
+          <p className="mt-2 mb-2 text-[13px] text-white/55">Graphic</p>
           <Toggle label="Show path" checked={design.pathVisible} onChange={(pathVisible) => onChange({ pathVisible })} />
           <Slider label="Scale" value={design.pathScale} min={0.6} max={1.6} step={0.02} onChange={(pathScale) => onChange({ pathScale })} />
           <Slider label="X" value={design.pathX} min={-240} max={240} onChange={(pathX) => onChange({ pathX })} />
@@ -133,7 +133,7 @@ export function DesignEditor({
       ) : null}
       {controls.texture ? (
         <>
-          <p className="mt-2 mb-2 text-[11px] tracking-[0.16em] uppercase opacity-50">Texture</p>
+          <p className="mt-2 mb-2 text-[13px] text-white/55">Texture</p>
           <Toggle
             label="Show texture"
             checked={design.textureVisible}
@@ -188,7 +188,7 @@ export function DesignEditor({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="mb-3 block">
-      <span className="mb-1.5 block text-[11px] tracking-[0.12em] uppercase opacity-50">{label}</span>
+      <span className="mb-1.5 block text-[12px] text-white/45">{label}</span>
       {children}
     </label>
   );
@@ -220,7 +220,7 @@ function Slider({
 }) {
   return (
     <label className="mb-3 block">
-      <span className="mb-1 flex justify-between text-[11px] tracking-[0.08em] uppercase opacity-50">
+      <span className="mb-1 flex justify-between text-[12px] text-white/45">
         <span>{label}</span>
         <span>{Number(value).toFixed(step < 1 ? 2 : 0)}</span>
       </span>
@@ -253,10 +253,10 @@ function Swatches({
             title={color.name}
             disabled={disabled}
             onClick={() => onSelect(color.id)}
-            className="h-[22px] w-[22px]"
+            className="h-[22px] w-[22px] rounded-full"
             style={{
               background: color.hex,
-              border: value === color.id ? "2px solid #f4f1ea" : "1px solid #ffffff33",
+              border: value === color.id ? "2px solid #f2f1ed" : "1px solid #ffffff33",
               opacity: disabled ? 0.25 : 1,
             }}
           />
@@ -267,8 +267,8 @@ function Swatches({
 }
 
 const input =
-  "w-full border border-white/15 bg-transparent px-2.5 py-2 text-[13px] text-[#f4f1ea]";
+  "w-full rounded-lg border border-white/15 bg-transparent px-2.5 py-2 text-[13px] text-[#f2f1ed]";
 
 function chip(active: boolean) {
-  return `border px-2 py-1.5 text-[10px] tracking-[0.08em] uppercase ${active ? "border-white/80" : "border-white/15"}`;
+  return `rounded-lg border px-2.5 py-1.5 text-[12px] ${active ? "border-white/80" : "border-white/15"}`;
 }

@@ -94,7 +94,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 pt-[15vh]" onClick={onClose}>
       <div
-        className="w-full max-w-lg border border-white/15 bg-[#171717] shadow-2xl"
+        className="w-full max-w-lg border border-white/15 bg-[#1b1c1f] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <input

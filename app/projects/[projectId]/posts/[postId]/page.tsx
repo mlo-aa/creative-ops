@@ -68,7 +68,7 @@ export default function PostEditorPage() {
   if (!post) {
     return (
       <main className="p-8">
-        <Link href={`/projects/${project.id}/feed`} className="text-xs uppercase tracking-[0.14em] opacity-50">
+        <Link href={`/projects/${project.id}/feed`} className="text-sm text-white/50">
           ← Feed
         </Link>
         <p className="mt-6">Post not found.</p>
@@ -83,7 +83,7 @@ export default function PostEditorPage() {
   if (!design || !template) {
     return (
       <main className="p-8">
-        <Link href={`/projects/${project.id}/feed`} className="text-xs uppercase tracking-[0.14em] opacity-50">
+        <Link href={`/projects/${project.id}/feed`} className="text-sm text-white/50">
           ← Feed
         </Link>
         <p className="mt-6">Post not found.</p>
@@ -113,7 +113,7 @@ export default function PostEditorPage() {
           <Link href={`/projects/${project.id}/feed`} className="text-xs uppercase tracking-[0.14em] opacity-50">
             ← Feed
           </Link>
-          <p className="mt-3 text-sm tracking-[0.12em] uppercase opacity-60">
+          <p className="mt-2 text-[15px] font-medium text-white/70">
             {post.number} — {post.title}
           </p>
         </div>
@@ -170,11 +170,11 @@ export default function PostEditorPage() {
       </div>
 
       {variationPicker && isDocument ? (
-        <div className="mb-4 flex flex-wrap items-end gap-3 border border-white/10 p-3">
+        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-white/10 p-3">
           <div>
-            <p className="mb-2 text-[10px] uppercase opacity-40">Variation mode</p>
+            <p className="mb-2 text-[12px] text-white/40">Variation mode</p>
             <select
-              className="border border-white/10 bg-[#141414] px-3 py-2 text-xs"
+              className="rounded-lg border border-white/10 bg-[#15171a] px-3 py-2 text-xs"
               value={variationMode}
               onChange={(e) => setVariationMode(e.target.value as VariationMode)}
             >
@@ -204,13 +204,13 @@ export default function PostEditorPage() {
       ) : null}
 
       {refPicker && isDocument ? (
-        <div className="mb-4 flex flex-wrap gap-2 border border-white/10 p-3">
-          <span className="w-full text-[10px] uppercase opacity-40">Reference for future generations</span>
+        <div className="mb-4 flex flex-wrap gap-2 rounded-2xl border border-white/10 p-3">
+          <span className="w-full text-[12px] text-white/40">Reference for future generations</span>
           {project.posts.filter((p) => p.id !== post.id).map((p) => (
             <button
               key={p.id}
               type="button"
-              className="border px-2 py-1 text-[10px] uppercase"
+              className="rounded-lg border px-2.5 py-1.5 text-[12px]"
               style={{ opacity: post.referencePostIds?.includes(p.id) ? 1 : 0.35 }}
               onClick={() => {
                 const ids = new Set(post.referencePostIds ?? []);
@@ -361,11 +361,11 @@ function CarouselBar({
               dragFrom.current = null;
             }}
             onClick={() => onSelect(slide.id)}
-            className="w-[72px] border bg-transparent p-0 text-[#f4f1ea]"
-            style={{ borderColor: slide.id === currentId ? "#f4f1ea" : "#ffffff33" }}
+            className="w-[72px] overflow-hidden rounded-lg border bg-transparent p-0 text-[#f2f1ed]"
+            style={{ borderColor: slide.id === currentId ? "#f2f1ed" : "#ffffff33" }}
           >
             <div className="pointer-events-none">{renderThumb(slide)}</div>
-            <span className="block px-1 py-1 text-[10px] tracking-[0.08em] uppercase">
+            <span className="block px-1 py-1 text-[12px]">
               {String(i + 1).padStart(2, "0")}
             </span>
           </button>
@@ -382,4 +382,4 @@ function CarouselBar({
 }
 
 const chrome =
-  "h-10 border border-white/20 px-3 text-[11px] tracking-[0.08em] uppercase disabled:opacity-30";
+  "h-10 rounded-xl border border-white/20 px-3.5 text-[13px] disabled:opacity-30";

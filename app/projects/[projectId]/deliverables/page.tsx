@@ -46,7 +46,7 @@ export default function ProjectDeliverablesPage() {
                   <p className="text-sm font-medium">{d.name}</p>
                   {d.deadline ? <p className="text-[10px] opacity-40">{d.deadline}</p> : null}
                   {d.relatedPostId ? (
-                    <Link href={`/projects/${params.projectId}/posts/${d.relatedPostId}`} className="text-[10px] text-[#7ecba8]">
+                    <Link href={`/projects/${params.projectId}/posts/${d.relatedPostId}`} className="text-[10px] text-[var(--project-accent,#e4e0d4)]">
                       View design
                     </Link>
                   ) : null}

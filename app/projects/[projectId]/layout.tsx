@@ -12,7 +12,10 @@ import {
 import { SubNav } from "@/core/ui/workspace-ui";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+const FOCUS_RING =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--project-accent,#e4e0d4)]";
 
 export default function ProjectLayout({ children }: { children: ReactNode }) {
   const params = useParams<{ projectId: string }>();
@@ -28,7 +31,7 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
   if (!project) {
     return (
       <main className="p-10">
-        <Link href="/projects" className="text-xs uppercase tracking-[0.14em] opacity-50">
+        <Link href="/projects" className="text-sm opacity-50">
           ← Projects
         </Link>
         <p className="mt-6">Project not found.</p>
@@ -36,41 +39,31 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
     );
   }
 
+  const accentVars = { "--project-accent": opsProject?.color ?? "#e4e0d4" } as CSSProperties;
+
   return (
     <ProjectScope project={project}>
-      <div className="min-h-screen">
-        <header className="border-b border-white/10 px-6 py-4">
+      <div className="min-h-screen" style={accentVars}>
+        <header className="border-b border-white/8 px-6 py-5">
           <div className="mx-auto flex max-w-[1400px] flex-wrap items-start justify-between gap-4">
             <div>
-              <Link
-                href="/projects"
-                className="text-[10px] tracking-[0.14em] uppercase opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
-              >
+              <Link href="/projects" className={`rounded-md text-[13px] opacity-45 ${FOCUS_RING}`}>
                 ← Projects
               </Link>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
+              <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
                 {opsProject ? (
-                  <span
-                    className="text-[10px] tracking-[0.18em] uppercase opacity-50"
-                    style={{ color: opsProject.color }}
-                  >
+                  <span className="text-[13px] font-medium" style={{ color: opsProject.color }}>
                     {opsProject.code}
                   </span>
                 ) : null}
-                <h1 className="text-lg tracking-[-0.02em]">{project.name}</h1>
+                <h1 className="text-xl font-semibold tracking-[-0.01em]">{project.name}</h1>
                 {opsProject ? (
-                  <>
-                    <span className="text-xs opacity-40">{opsProject.clientName}</span>
-                    <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">
-                      {(opsProject.types ?? [opsProject.type]).join(", ")}
-                    </span>
-                    <span className="text-[10px] tracking-[0.14em] uppercase opacity-35">{opsProject.status}</span>
-                  </>
+                  <span className="text-[13px] text-white/40">
+                    {opsProject.clientName}, {(opsProject.types ?? [opsProject.type]).join(", ")}, {opsProject.status}
+                  </span>
                 ) : null}
               </div>
-              {project.campaign ? (
-                <p className="mt-1 text-[10px] tracking-[0.12em] uppercase opacity-40">{project.campaign}</p>
-              ) : null}
+              {project.campaign ? <p className="mt-1 text-[13px] text-white/35">{project.campaign}</p> : null}
             </div>
           </div>
 
@@ -81,19 +74,17 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
                 const p = `/projects/${project.id}/${section.slug}`;
                 return pathname === p || pathname.startsWith(`${p}/`);
               });
+              const isActive = sectionActive && !inStudio;
               return (
                 <Link
                   key={item.href}
                   href={href}
-                  aria-current={sectionActive && !inStudio ? "page" : undefined}
-                  className="px-3.5 py-2.5 text-[10px] tracking-[0.14em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+                  aria-current={isActive ? "page" : undefined}
+                  className={`rounded-lg px-4 py-2.5 text-[13px] transition ${FOCUS_RING}`}
                   style={{
-                    opacity: sectionActive && !inStudio ? 1 : 0.4,
-                    background: sectionActive && !inStudio ? "rgba(255,255,255,0.06)" : "transparent",
-                    borderBottom:
-                      sectionActive && !inStudio
-                        ? `2px solid ${opsProject?.color ?? "#fff"}`
-                        : "2px solid transparent",
+                    opacity: isActive ? 1 : 0.5,
+                    background: isActive ? "rgba(255,255,255,0.07)" : "transparent",
+                    color: isActive ? (opsProject?.color ?? undefined) : undefined,
                   }}
                 >
                   {item.label}
@@ -103,11 +94,11 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
             <Link
               href={`/projects/${project.id}/feed`}
               aria-current={inStudio ? "page" : undefined}
-              className="px-3.5 py-2.5 text-[10px] tracking-[0.14em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
+              className={`rounded-lg px-4 py-2.5 text-[13px] transition ${FOCUS_RING}`}
               style={{
-                opacity: inStudio ? 1 : 0.4,
-                background: inStudio ? "rgba(255,255,255,0.06)" : "transparent",
-                borderBottom: inStudio ? `2px solid ${opsProject?.color ?? "#fff"}` : "2px solid transparent",
+                opacity: inStudio ? 1 : 0.5,
+                background: inStudio ? "rgba(255,255,255,0.07)" : "transparent",
+                color: inStudio ? (opsProject?.color ?? undefined) : undefined,
               }}
             >
               Posts
@@ -119,18 +110,17 @@ export default function ProjectLayout({ children }: { children: ReactNode }) {
           ) : null}
 
           {inStudio ? (
-            <nav aria-label="Studio" className="mx-auto mt-2 flex max-w-[1400px] flex-wrap gap-3 border-t border-white/5 pt-2">
+            <nav aria-label="Studio" className="mx-auto mt-2 flex max-w-[1400px] flex-wrap gap-4 border-t border-white/6 pt-2.5">
               {PROJECT_STUDIO_TABS.map((item) => {
                 const href = `/projects/${project.id}/${item.href}`;
-                const active =
-                  pathname === href || (item.href === "posts" && pathname.includes("/posts/"));
+                const active = pathname === href || (item.href === "posts" && pathname.includes("/posts/"));
                 return (
                   <Link
                     key={item.href}
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    className="text-[10px] tracking-[0.12em] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7ecb88]"
-                    style={{ opacity: active ? 0.9 : 0.35 }}
+                    className={`rounded-md text-[13px] ${FOCUS_RING}`}
+                    style={{ opacity: active ? 0.95 : 0.4 }}
                   >
                     {item.label}
                   </Link>

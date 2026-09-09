@@ -44,7 +44,7 @@ export default function ProjectBrandingPage() {
               Keywords (comma-separated)
             </span>
             <input
-              className="w-full border border-white/10 bg-[#141414] px-3 py-2 text-sm"
+              className="w-full border border-white/10 bg-[#15171a] px-3 py-2 text-sm"
               value={ext.keywords.join(", ")}
               onChange={(e) =>
                 save({ keywords: e.target.value.split(",").map((k) => k.trim()).filter(Boolean) })

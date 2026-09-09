@@ -33,9 +33,9 @@ export default function IdeaMapPage() {
             data: { label: n.label, type: n.type, projectId: n.projectId },
             type: "default",
             style: {
-              background: "#1a1a1a",
+              background: "#1b1c1f",
               border: "1px solid rgba(255,255,255,0.15)",
-              color: "#f1f3f7",
+              color: "#f2f1ed",
               fontSize: 12,
               padding: 8,
               minWidth: 120,
@@ -46,7 +46,7 @@ export default function IdeaMapPage() {
               id: "seed-1",
               position: { x: 120, y: 120 },
               data: { label: "Start here", type: "idea" },
-              style: { background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.15)", color: "#f1f3f7", padding: 8 },
+              style: { background: "#1b1c1f", border: "1px solid rgba(255,255,255,0.15)", color: "#f2f1ed", padding: 8 },
             },
           ],
     [ops.ideaNodes],
@@ -91,7 +91,7 @@ export default function IdeaMapPage() {
         id,
         position: { x: 100 + nds.length * 30, y: 100 + nds.length * 20 },
         data: { label: "New node", type: "idea" },
-        style: { background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.15)", color: "#f1f3f7", padding: 8 },
+        style: { background: "#1b1c1f", border: "1px solid rgba(255,255,255,0.15)", color: "#f2f1ed", padding: 8 },
       },
     ]);
   }

@@ -37,8 +37,8 @@ export function DocumentEditor({
   }
 
   return (
-    <aside className="w-[320px] shrink-0 border border-white/10 bg-[#141414] p-4">
-      <h2 className="text-[11px] tracking-[0.14em] uppercase opacity-50">Document layers</h2>
+    <aside className="w-[320px] shrink-0 rounded-2xl border border-white/10 bg-[#15171a] p-4">
+      <h2 className="text-[13px] text-white/55">Document layers</h2>
       <ul className="mt-3 max-h-48 space-y-1 overflow-auto">
         {[...document.elements].reverse().map((el) => (
           <li key={el.id}>
@@ -146,7 +146,7 @@ export function DocumentEditor({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] uppercase opacity-45">{label}</span>
+      <span className="mb-1 block text-[12px] text-white/45">{label}</span>
       {children}
     </label>
   );

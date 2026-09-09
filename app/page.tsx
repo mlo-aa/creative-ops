@@ -1,13 +1,17 @@
 "use client";
 
 import { useStudio } from "@/core/store";
+import { meshGradient } from "@/core/ui/gradient";
+import { btnPrimary, inputClass, SectionHeader } from "@/core/ui/OpsField";
+import { Calendar, FileText, Layers, Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { btnPrimary, SectionHeader, StatusPill } from "@/core/ui/OpsField";
 
 export default function DashboardPage() {
-  const { ready, projects, ops, allPosts } = useStudio();
-  const [filter, setFilter] = useState<"active" | "all">("active");
+  const { ready, projects, ops, allPosts, addIdea } = useStudio();
+  const [ideaTitle, setIdeaTitle] = useState("");
+  const [ideaProjectId, setIdeaProjectId] = useState("");
+  const [ideaSaved, setIdeaSaved] = useState(false);
 
   const activeOps = ops.projects.filter((p) => p.status === "active");
   const upcoming = useMemo(() => {
@@ -48,6 +52,8 @@ export default function DashboardPage() {
     return diff >= 0 && diff <= 7;
   }).length;
 
+  const recentActivity = ops.activities.slice(0, 6);
+
   if (!ready) return <p className="opacity-50">Loading…</p>;
 
   return (
@@ -60,103 +66,161 @@ export default function DashboardPage() {
           </Link>
         }
       />
-      <p className="-mt-4 mb-10 max-w-xl text-sm opacity-55">
+      <p className="-mt-4 mb-10 max-w-xl text-sm text-white/55">
         Creative operations — strategy, content, design and delivery in one workspace.
       </p>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <section className="lg:col-span-2 space-y-8">
+        <section className="space-y-10 lg:col-span-2">
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xs tracking-[0.16em] uppercase opacity-45">Active projects</h2>
-              <Link href="/projects" className="text-[11px] tracking-[0.1em] uppercase opacity-50">
+              <h2 className="text-[15px] font-medium text-white/70">Active projects</h2>
+              <Link href="/projects" className="text-[13px] text-white/45 hover:text-white/70">
                 View all
               </Link>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {activeOps.slice(0, 4).map((op) => {
                 const studio = projects.find((p) => p.id === op.id);
                 const postCount = studio?.posts.filter((p) => p.status === "active").length ?? 0;
                 return (
                   <Link
                     key={op.id}
-                    href={`/projects/${op.id}/ideas`}
-                    className="group border border-white/10 p-5 transition hover:border-white/25"
-                    style={{ borderLeftColor: op.color, borderLeftWidth: 3 }}
+                    href={`/projects/${op.id}/overview`}
+                    className="group relative isolate flex min-h-[168px] flex-col justify-between overflow-hidden rounded-[18px] p-5 text-white transition"
+                    style={{ backgroundImage: meshGradient(op.color) }}
                   >
-                    <p className="text-[10px] tracking-[0.16em] uppercase opacity-40">{op.code}</p>
-                    <p className="mt-1 text-lg tracking-[-0.02em]">{op.name}</p>
-                    <p className="mt-1 text-xs opacity-45">{op.clientName}</p>
-                    <p className="mt-4 text-[10px] tracking-[0.12em] uppercase opacity-35">
-                      {postCount} active designs · {op.type}
-                    </p>
+                    <div>
+                      <p className="text-[12px] text-white/70">{op.code}</p>
+                      <p className="mt-1 text-xl font-semibold tracking-[-0.01em]">{op.name}</p>
+                      <p className="mt-1 text-[13px] text-white/70">{op.clientName}</p>
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-2xl font-bold leading-none">{postCount}</p>
+                        <p className="mt-1 text-[12px] text-white/70">Active designs</p>
+                      </div>
+                      <span className="rounded-full bg-black/25 px-2.5 py-1 text-[12px] text-white/85">
+                        {(op.types ?? [op.type]).join(", ")}
+                      </span>
+                    </div>
                   </Link>
                 );
               })}
+              {activeOps.length === 0 ? (
+                <Link
+                  href="/projects/new"
+                  className="flex min-h-[168px] flex-col items-center justify-center gap-2 rounded-[18px] border border-white/10 text-sm text-white/45 hover:border-white/25"
+                >
+                  <Plus size={18} />
+                  Start your first project
+                </Link>
+              ) : null}
             </div>
           </div>
 
           <div>
-            <h2 className="mb-4 text-xs tracking-[0.16em] uppercase opacity-45">Recent activity</h2>
-            <ul className="space-y-2">
-              {ops.activities.slice(0, 8).map((a) => (
-                <li key={a.id} className="flex gap-3 border-b border-white/5 py-2 text-sm opacity-70">
-                  <span className="shrink-0 text-[10px] tracking-[0.1em] uppercase opacity-35">
-                    {new Date(a.createdAt).toLocaleDateString()}
-                  </span>
-                  {a.message}
-                </li>
-              ))}
-              {ops.activities.length === 0 ? (
-                <li className="text-sm opacity-40">No activity yet.</li>
-              ) : null}
-            </ul>
+            <h2 className="mb-4 text-[15px] font-medium text-white/70">Recent activity</h2>
+            {recentActivity.length ? (
+              <ul className="space-y-1">
+                {recentActivity.map((a) => (
+                  <li key={a.id} className="flex gap-3 border-b border-white/6 py-2.5 text-sm text-white/70">
+                    <span className="shrink-0 text-[12px] text-white/35">
+                      {new Date(a.createdAt).toLocaleDateString()}
+                    </span>
+                    {a.message}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <form
+                className="flex flex-col gap-3 rounded-[18px] border border-white/10 p-5 sm:flex-row sm:items-center"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const projectId = ideaProjectId || activeOps[0]?.id;
+                  if (!ideaTitle.trim() || !projectId) return;
+                  addIdea({
+                    projectId,
+                    title: ideaTitle.trim(),
+                    body: "",
+                    category: "",
+                    status: "idea",
+                    tags: [],
+                    onGlobalMap: true,
+                  });
+                  setIdeaTitle("");
+                  setIdeaSaved(true);
+                  window.setTimeout(() => setIdeaSaved(false), 2000);
+                }}
+              >
+                <div className="flex-1">
+                  <p className="text-sm text-white/60">Nothing's happened yet — got an idea on your mind?</p>
+                  <input
+                    value={ideaTitle}
+                    onChange={(e) => setIdeaTitle(e.target.value)}
+                    placeholder="Capture a quick idea…"
+                    className={`${inputClass} mt-2`}
+                  />
+                </div>
+                {activeOps.length > 1 ? (
+                  <select
+                    value={ideaProjectId}
+                    onChange={(e) => setIdeaProjectId(e.target.value)}
+                    className={`${inputClass} sm:w-40`}
+                  >
+                    <option value="">{activeOps[0]?.name}</option>
+                    {activeOps.map((op) => (
+                      <option key={op.id} value={op.id}>
+                        {op.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+                <button type="submit" className={btnPrimary}>
+                  {ideaSaved ? "Added ✓" : "Add to idea map"}
+                </button>
+              </form>
+            )}
           </div>
         </section>
 
         <aside className="space-y-8">
-          <div className="border border-white/10 p-5">
-            <h2 className="text-xs tracking-[0.16em] uppercase opacity-45">This week</h2>
-            <dl className="mt-4 space-y-3 text-sm">
-              <div className="flex justify-between">
-                <dt className="opacity-50">Content scheduled</dt>
-                <dd>{weekContent}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="opacity-50">Draft designs</dt>
-                <dd>{drafts}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="opacity-50">Active projects</dt>
-                <dd>{activeOps.length}</dd>
-              </div>
-            </dl>
+          <div className="rounded-[18px] border border-white/10 p-5">
+            <h2 className="text-[15px] font-medium text-white/70">This week</h2>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              <Stat icon={<Calendar size={16} />} value={weekContent} label="Scheduled" />
+              <Stat icon={<FileText size={16} />} value={drafts} label="Drafts" />
+              <Stat icon={<Layers size={16} />} value={activeOps.length} label="Projects" />
+            </div>
           </div>
 
           <div>
-            <h2 className="mb-3 text-xs tracking-[0.16em] uppercase opacity-45">Upcoming deadlines</h2>
-            <ul className="space-y-2">
+            <h2 className="mb-3 text-[15px] font-medium text-white/70">Upcoming deadlines</h2>
+            <ul className="space-y-1">
               {upcoming.map((item) => (
                 <li key={`${item.date}-${item.label}`}>
-                  <Link href={item.href} className="flex items-center gap-3 py-1.5 text-sm hover:opacity-80">
-                    <span
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ background: item.color }}
-                    />
-                    <span className="flex-1 truncate opacity-75">{item.label}</span>
-                    <span className="text-[10px] uppercase tracking-[0.1em] opacity-40">
-                      {item.date.slice(5)}
-                    </span>
+                  <Link href={item.href} className="flex items-center gap-3 rounded-lg py-2 text-sm hover:bg-white/5">
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: item.color }} />
+                    <span className="flex-1 truncate text-white/75">{item.label}</span>
+                    <span className="text-[12px] text-white/40">{item.date.slice(5)}</span>
                   </Link>
                 </li>
               ))}
-              {upcoming.length === 0 ? (
-                <li className="text-sm opacity-40">Nothing due soon.</li>
-              ) : null}
+              {upcoming.length === 0 ? <li className="text-sm text-white/40">Nothing due soon.</li> : null}
             </ul>
           </div>
         </aside>
       </div>
     </>
+  );
+}
+
+function Stat({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
+  return (
+    <div>
+      <div className="text-white/40">{icon}</div>
+      <p className="mt-2 text-2xl font-bold leading-none">{value}</p>
+      <p className="mt-1 text-[12px] text-white/45">{label}</p>
+    </div>
   );
 }

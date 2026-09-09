@@ -85,7 +85,7 @@ export default function ProjectContentPage() {
               </div>
             </div>
             <select
-              className="mt-3 border border-white/10 bg-[#141414] text-[10px] uppercase"
+              className="mt-3 border border-white/10 bg-[#15171a] text-[10px] uppercase"
               value={item.status}
               onChange={(e) => updateContentItem(item.id, { status: e.target.value as ContentStatus })}
             >
