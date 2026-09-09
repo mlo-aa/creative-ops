@@ -14,6 +14,9 @@
   --studio-accent: #e4e0d4;
   --project-accent: var(--studio-accent);
   --radius-card: 18px;
+  /* Mobile bottom nav content height (below md breakpoint only); the safe
+     area inset is added on top of this, not included in it. */
+  --bottom-nav-h: 60px;
   --background: var(--studio-bg);
   --foreground: var(--studio-text);
 }

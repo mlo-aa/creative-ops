@@ -2,6 +2,11 @@ export type NavItem = { href: string; label: string };
 
 export type NavGroup = { id: string; label?: string; items: NavItem[] };
 
+/** Shared active-route check for both the top nav and the mobile bottom nav. */
+export function isNavActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
 /**
  * Primary global navigation — kept intentionally short. Posts lives inside
  * each project now, and Clients/Proposals are hidden (not removed) for now.

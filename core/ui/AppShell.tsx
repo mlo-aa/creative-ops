@@ -1,8 +1,9 @@
 "use client";
 
 import { useStudio } from "@/core/store";
-import { GLOBAL_NAV_GROUPS } from "@/core/ui/nav-config";
+import { GLOBAL_NAV_GROUPS, isNavActive } from "@/core/ui/nav-config";
 import { NavGroupSeparator } from "@/core/ui/workspace-ui";
+import { BottomNav } from "@/core/ui/BottomNav";
 import { CommandPalette } from "@/core/ui/CommandPalette";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,10 +11,6 @@ import { useEffect, useState, type ReactNode } from "react";
 
 const ACCENT = "var(--project-accent,#e4e0d4)";
 const FOCUS_RING = `focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[${ACCENT}]`;
-
-function isNavActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
-}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -108,7 +105,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className={inProjectStudio ? "" : "mx-auto max-w-[1400px] px-5 py-8"}>{children}</main>
+      <main
+        className={`${inProjectStudio ? "" : "mx-auto max-w-[1400px] px-5 py-8"} pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom))] md:pb-0`}
+      >
+        {children}
+      </main>
+      <BottomNav />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
